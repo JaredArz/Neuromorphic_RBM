@@ -19,7 +19,6 @@ import os
 #-Controlled Magnetic Anisotropy and Spin Orbit Torque Magnetic Tunnel Junctions 
 
 # limit current according to [1]
-limit_current = lambda J: -6e9 if(J < -6e9) else( 6e9 if(J > 6e9) else J)
 def SA(sol_queue,get_run_data_flag):
     # ========================== Problem definition =========================
     prob = "Max Sat"
@@ -77,21 +76,22 @@ def SA(sol_queue,get_run_data_flag):
     # ===============================================================================
 
 
-
     # ================ annealing schedule ====================
-    #was using x,3,20,0.01
-    total_iters = 1000   #Number of Simulations to Run
+    total_iters = 500   #Number of Simulations to Run
     iter_per_temp = 3
-    #4 for mtj, 20 for memrsit correlation between range and temp length
-    T_init = 4.00
-    T_step = 0.01
-    temp_to_J =  lambda t: ((t-1)/(T_init-1) * (5e11-1e11))+1e11
+    # === values from [1] ===
+    Jsot_max    = 5e11      #
+    Jsot_min    = 1e11      #
+    # =======================
+    Jsot_steps = 50
+    Jsot_delta = ( Jsot_max - Jsot_min ) / Jsot_steps 
+    limit_current = lambda J: -6e9 if(J < -6e9) else( 6e9 if(J > 6e9) else J)
     # ========================================================
     #   simple way to get run data for parallel process while keeping all variables contained within this function
     if get_run_data_flag == 0:
         pass
     else:
-        return prob,total_iters,iter_per_temp, T_init, T_step, mag_dev_sig, g_dev_sig, g_cyc_sig,scale
+        return prob,total_iters,iter_per_temp, Jsot_steps, mag_dev_sig, g_dev_sig, g_cyc_sig,scale
 
 
     # ////////////
@@ -107,17 +107,15 @@ def SA(sol_queue,get_run_data_flag):
     Vertices = funcs.sample_neurons(devs,0,0,0)
     weighted = np.dot(Vertices, Edges) 
 
-    Teff = T_init #Set/Reset Temperature    
     Energys = set()
     Solutions = set()
 
-    while(Teff >= 1): #J, effectively 
+    Teff = Jsot_max #Set effective temperature
+    while(Teff >= Jsot_min): 
         for g in range(iter_per_temp):
             weighted_scaled = weighted * scale
             weighted_scaled_limited = funcs.lmap(limit_current,weighted_scaled)
-            Vertices = (funcs.sample_neurons(devs,weighted_scaled,temp_to_J(Teff),0))
-
-            #weighted_scaled_and_sigmoided = funcs.lmap(sigmoid_device,weighted_scaled)
+            Vertices = (funcs.sample_neurons(devs,weighted_scaled_limited,Teff,0))
 
             Energys.add(Vertices @ Edges @ np.array(Vertices).T)
             Solutions.add(funcs.convertToDec(Vertices)) 
@@ -126,35 +124,33 @@ def SA(sol_queue,get_run_data_flag):
             #   weighted arr is the result of VMM --
             #   once scaled, it's used as input for the array of MTJs
             #   NOTE: i believe the weighted acts as a nearest neighbour function
-            #
             #============================
-
 
             weighted = np.dot(Vertices, Edges)
             Edges = funcs.inject_add_cyc_noise(Edges_base,g_cyc_sig)
-        Teff -= T_step
+        Teff -= Jsot_delta
     solution = funcs.convertToDec(Vertices)
     sol_queue.put(solution)
 
 def print_simulation_setup(batch_size) -> None:
-    prob,total_iters,iter_per_temp, T_init, T_step, mag_dev_sig, g_dev_sig, g_cyc_sig,scale  = SA([],1)
+    prob,total_iters,iter_per_temp, Jsot_steps, mag_dev_sig, g_dev_sig, g_cyc_sig,scale  = SA([],1)
     single_sample_time = 0.0002182
     print("====================================================")
     print(f"---------- starting parallel {prob} SA sim with:\n\
             parallel batch size of {batch_size}\n\
             {total_iters} total iterations\n\
             {iter_per_temp} iteration(s) per temp\n\
-            {T_init} inital temp\n\
+            {Jsot_steps} temp steps\n\
             MTJ device deviation = {mag_dev_sig}\n\
             G device deviation   = {g_dev_sig}\n\
             G cycle deviation    = {g_cyc_sig}\n\
-          \r---------- estimated run time: {math.ceil((total_iters * single_sample_time * iter_per_temp * T_init/T_step)/((batch_size)/2.5 * 60))} minutes")
+          \r---------- estimated run time: {math.ceil((total_iters * single_sample_time * iter_per_temp * Jsot_steps)/((batch_size)/2.5 * 60))} minutes")
     print("====================================================")
     return prob, total_iters
 
 def plot():
-    prob,total_iters,iter_per_temp, T_init, T_step, mag_dev_sig, g_dev_sig, g_cyc_sig,scale  = SA([],1)
-    funcs.my_hist(prob,total_iters,sols,scale,T_init)
+    prob,total_iters,iter_per_temp, Jsot_steps, mag_dev_sig, g_dev_sig, g_cyc_sig,scale  = SA([],1)
+    funcs.my_hist(prob,total_iters,sols,scale,iter_per_temp,Jsot_steps,mag_dev_sig,g_dev_sig,g_cyc_sig)
 
 if __name__ == "__main__":
     total_start_time = time.time()

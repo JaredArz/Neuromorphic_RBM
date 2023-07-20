@@ -26,7 +26,7 @@ def handle_w_path(prob):
     w_path = Path( out_dir / w_file)
     return(w_path)
 
-def my_hist(prob,num_iter,sols,scale,T_init) -> None:
+def my_hist(prob,num_iter,sols,scale,iter_per_temp,Jsot_steps,mag_dev_sig,g_dev_sig,g_cyc_sig) -> None:
     # =================================
     # ===== Graphing of Histogram =====
     # =================================
@@ -53,10 +53,12 @@ def my_hist(prob,num_iter,sols,scale,T_init) -> None:
     plt.xlabel('Value')
     plt.ylabel('Frequency')
     plt.title(prob + ' Solution Frequency Over ' + str(num_iter) + ' Iterations')
-    plt.text(4,4, f"scale {scale:1.0e}")
-    plt.text(4,3.75, f"T_init {T_init}")
-    #plt.text(0.1,0.10, )
-    #plt.text(0.1,0.05, )
+    plt.annotate(f"Amplification: {scale:1.0e}",xy = (275,280), xycoords='figure points')
+    plt.annotate(f"Num steps {Jsot_steps}", xy = (275,270),xycoords='figure points')
+    plt.annotate(f"Iters per step {iter_per_temp}", xy = (275,260),xycoords='figure points')
+    plt.annotate(f"MTJ dev-to-dev  σ {mag_dev_sig}", xy = (275,250),xycoords='figure points')
+    plt.annotate(f"CBA dev-to-dev σ {g_dev_sig}", xy = (275,240),xycoords='figure points')
+    plt.annotate(f"CBA cyc-to-cyc  σ {g_cyc_sig}", xy = (275,230),xycoords='figure points')
     #plt.show()
     #print("Save figure? y/n")
     #user_input = input()
