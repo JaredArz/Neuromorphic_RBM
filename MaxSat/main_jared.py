@@ -15,9 +15,11 @@ from re import S
 import time
 import os
 
-# 1e9 if J is above 1e9, and 1e4 if below -- no change if inbetween
-#sigmoid_device = lambda J: 1e9 if(J > 1e9) else( 1e4 if(J < 1e4 and J > 0) else(-1e4 if(J > -1e4 and J < 0) else(-1e9 if(J < -1e9 ) else J)))
-#sigmoid_device = lambda J: 1e9 if(J > 1e9) else( 1e4 if(J < 1e4) else J)
+#REFERENCES: [1] Random Bitstream Generation using Voltage
+#-Controlled Magnetic Anisotropy and Spin Orbit Torque Magnetic Tunnel Junctions 
+
+# limit current according to [1]
+limit_current = lambda J: -6e9 if(J < -6e9) else( 6e9 if(J > 6e9) else J)
 def SA(sol_queue,get_run_data_flag):
     # ========================== Problem definition =========================
     prob = "Max Sat"
@@ -112,6 +114,7 @@ def SA(sol_queue,get_run_data_flag):
     while(Teff >= 1): #J, effectively 
         for g in range(iter_per_temp):
             weighted_scaled = weighted * scale
+            weighted_scaled_limited = funcs.lmap(limit_current,weighted_scaled)
             Vertices = (funcs.sample_neurons(devs,weighted_scaled,temp_to_J(Teff),0))
 
             #weighted_scaled_and_sigmoided = funcs.lmap(sigmoid_device,weighted_scaled)
