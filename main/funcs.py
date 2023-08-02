@@ -3,6 +3,8 @@
 #
 # Various helper functions used in the simulated annealing scripts
 # ==================================================================
+import sys
+sys.path.append('./fortran_source')
 import single_sample as ss
 
 import matplotlib.pyplot as plt
@@ -108,23 +110,39 @@ abs_arr         = lambda e: abs(e)
 lmap = lambda func, *iterable: list(map(func, *iterable))
 # The resistance is experimentally observed to be approximately log-normal (both cycle-to-cycle and device-to-device)
 # From Intrinsic Switching Variability in HfO2 RRAM, A.Fantini
-def inject_add_cyc_noise(G_in,stdd) -> np.ndarray:
-    if stdd == 0:
+def inject_add_cyc_noise(G_in,cbarr,std_dev=None) -> np.ndarray:
+    if std_dev == 0:
         return G_in
+    #//////////////////
+    if std_dev is None:
+        stdd = cbarr.base_cyc_stdd
     else:
-        sign_matrix  = np.reshape([-1 if element < 0 else 1 for element in G_in.flatten()],(6,6))
+        stdd = std_dev
+    #//////////////////
+    if cbarr.device_type == "Memristor":
+        sign_matrix   = np.reshape([-1 if element < 0 else 1 for element in G_in.flatten()],(6,6))
         abs_G_in      = lmap(abs_arr,G_in)
         R_log         = lmap(get_Log10R, abs_G_in)
         R_log_w_noise = lmap(sample_noise, R_log, it.repeat(stdd))
         abs_G_out     = lmap(to_G, R_log_w_noise)
         G_out         = np.multiply(abs_G_out, sign_matrix)
         return G_out
+    elif cbarr.device_type == "MTJ":
+        diff = (1.0/cbarr.LRS) - (1.0/cbarr.HRS) 
+        scaled_stdd = diff*stdd
+        noise = np.random.normal(0,scaled_stdd,6)
+        return G_in + noise
 
-#NOTE: same function for now, improve accuracy of variation if new information is found.
-def inject_add_dev_var(G_in,stdd) -> np.ndarray:
-    if stdd == 0:
+def inject_add_dev_var(G_in,cbarr,std_dev=None) -> np.ndarray:
+    if std_dev == 0:
         return G_in
+    #//////////////////
+    if std_dev == None:
+        stdd = cbarr.base_dev_stdd
     else:
+        stdd = std_dev
+    #//////////////////
+    if cbarr.device_type == "Memristor":
         sign_matrix  = np.reshape([-1 if element < 0 else 1 for element in G_in.flatten()],(6,6))
         abs_G_in      = lmap(abs_arr,G_in)
         R_log         = lmap(get_Log10R, abs_G_in)
@@ -132,3 +150,10 @@ def inject_add_dev_var(G_in,stdd) -> np.ndarray:
         abs_G_out     = lmap(to_G, R_log_w_noise)
         G_out         = np.multiply(abs_G_out, sign_matrix)
         return G_out
+    elif cbarr.device_type == "MTJ":
+        diff = (1.0/cbarr.LRS) - (1.0/cbarr.HRS) 
+        scaled_stdd = diff*stdd
+        noise = np.random.normal(0,scaled_stdd,6)
+        return G_in + noise
+
+

@@ -1,5 +1,3 @@
-import sys
-sys.path.append('./fortran_source')
 import matplotlib.pyplot as plt
 import random as rnd
 import numpy as np
@@ -53,13 +51,13 @@ def SA(sol_queue,sol_hist_queue,e_hist_queue,get_run_data_flag):
    
    
     # ========================== device init  ===============================
-    mag_dev_sig = 1
-    #FIXME: values gleaned from paper
-    #FIXME: dev-dev variation may have significant impact
-    g_dev_sig = 0.375        # device to device variation
-    g_cyc_sig = 0.375        # cycle to cycle variation 
+    cb_array = RRAM_types.MTJ_INC
 
-    cb_array = RRAM_types.HfHfO2
+    mag_dev_sig = 1
+    #None uses default values
+    g_dev_sig  = None       # device to device variation
+    g_cyc_sig  = None       # cycle to cycle variation 
+
     if prob == "Max Sat":
         scale  = cb_array.Max_Sat_amp
     elif prob == "Max Cut":
@@ -69,7 +67,7 @@ def SA(sol_queue,sol_hist_queue,e_hist_queue,get_run_data_flag):
     
     #   map abstract weights to conductances
     Edges = (( (Edges-np.min(Edges)/(np.max(Edges)-np.min(Edges)))*(gmax-gmin))+gmin )
-    Edges_base = funcs.inject_add_dev_var(Edges,g_dev_sig)
+    Edges_base = funcs.inject_add_dev_var(Edges,cb_array,g_dev_sig)
 
     thetas    = np.full(6,np.pi/2)
     phis      = np.ones_like(thetas)*np.random.uniform(0,2*np.pi,size=np.shape(thetas))
@@ -78,13 +76,13 @@ def SA(sol_queue,sol_hist_queue,e_hist_queue,get_run_data_flag):
 
 
     # ================ annealing schedule ====================
-    total_iters = 1000   #Number of Simulations to Run
+    total_iters = 5000   #Number of Simulations to Run
     iter_per_temp = 3
     # === values from [1] ===
     Jsot_max    = 5e11      #
     Jsot_min    = 1e11      #
     # =======================
-    Jsot_steps = 25
+    Jsot_steps = 51
     Jsot_delta = ( Jsot_max - Jsot_min ) / Jsot_steps 
     limit_current = lambda J: -6e9 if(J < -6e9) else( 6e9 if(J > 6e9) else J)
     # ========================================================
@@ -92,7 +90,9 @@ def SA(sol_queue,sol_hist_queue,e_hist_queue,get_run_data_flag):
     if get_run_data_flag == 0:
         pass
     else:
-        return prob,total_iters,iter_per_temp, Jsot_steps, mag_dev_sig, g_dev_sig, g_cyc_sig,scale
+        g_dev_out = (cb_array.base_dev_stdd if(g_dev_sig is None) else(g_dev_sig))
+        g_cyc_out = (cb_array.base_cyc_stdd if(g_cyc_sig is None) else(g_cyc_sig))
+        return prob,total_iters,iter_per_temp, Jsot_steps, mag_dev_sig, g_dev_out, g_cyc_out,scale
 
 
     # ////////////
@@ -123,7 +123,7 @@ def SA(sol_queue,sol_hist_queue,e_hist_queue,get_run_data_flag):
             #   once scaled, it's used as input for the array of MTJs
             #============================
             weighted = np.dot(Vertices, Edges)
-            Edges = funcs.inject_add_cyc_noise(Edges_base,g_cyc_sig)
+            Edges = funcs.inject_add_cyc_noise(Edges_base,cb_array,g_cyc_sig)
         energy_history.append(Vertices @ Edges @ np.array(Vertices).T)
         solution_history.append(funcs.convertToDec(Vertices)) 
         Teff -= Jsot_delta
@@ -165,7 +165,7 @@ if __name__ == "__main__":
     all_sols = []
     all_e = []
     #NOTE: fine if personal, change if lab puter
-    batch_size = os.cpu_count() 
+    batch_size = 3 * os.cpu_count() 
     #   function call to get run data for job creation and for user to see
     prob, total_iters = print_simulation_setup(batch_size)
 
@@ -207,6 +207,6 @@ if __name__ == "__main__":
     date = plot()
     print("-------- done ---------")
     f = open(f"./plot_energy/energy_data_{date}.py", "w")
-    f.write("e = " + str(all_e))
+    f.write("e = " + str(all_e) + "\n")
     f.write("s = " + str(all_sols))
     f.close()
