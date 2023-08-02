@@ -19,7 +19,7 @@ import os
 def handle_w_path(prob):
     #create dir and write path
     date = datetime.now().strftime("%m-%d_%H:%M:%S")
-    out_dir = Path("./outputs")
+    out_dir = Path("./outputs/debug_1")
     if not os.path.isdir(out_dir):
         os.mkdir(out_dir)
     w_file = ("RBM_Sim_" + prob + '_' + date + '_Hist.png').replace(" ","") 

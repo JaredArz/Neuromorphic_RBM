@@ -51,12 +51,14 @@ def SA(sol_queue,sol_hist_queue,e_hist_queue,get_run_data_flag):
    
    
     # ========================== device init  ===============================
-    cb_array = RRAM_types.MTJ_INC
+    cb_array = RRAM_types.HfHfO2
 
     mag_dev_sig = 1
     #None uses default values
-    g_dev_sig  = None       # device to device variation
-    g_cyc_sig  = None       # cycle to cycle variation 
+
+    #works nicely for RRAM
+    g_dev_sig  = 0.1       # device to device variation
+    g_cyc_sig  = 0.25       # cycle to cycle variation 
 
     if prob == "Max Sat":
         scale  = cb_array.Max_Sat_amp
@@ -76,13 +78,13 @@ def SA(sol_queue,sol_hist_queue,e_hist_queue,get_run_data_flag):
 
 
     # ================ annealing schedule ====================
-    total_iters = 5000   #Number of Simulations to Run
+    total_iters = 1000   #Number of Simulations to Run
     iter_per_temp = 3
     # === values from [1] ===
     Jsot_max    = 5e11      #
     Jsot_min    = 1e11      #
     # =======================
-    Jsot_steps = 51
+    Jsot_steps = 100
     Jsot_delta = ( Jsot_max - Jsot_min ) / Jsot_steps 
     limit_current = lambda J: -6e9 if(J < -6e9) else( 6e9 if(J > 6e9) else J)
     # ========================================================
@@ -165,7 +167,7 @@ if __name__ == "__main__":
     all_sols = []
     all_e = []
     #NOTE: fine if personal, change if lab puter
-    batch_size = 3 * os.cpu_count() 
+    batch_size = os.cpu_count() 
     #   function call to get run data for job creation and for user to see
     prob, total_iters = print_simulation_setup(batch_size)
 
@@ -201,12 +203,13 @@ if __name__ == "__main__":
         pbar.update(batch_size)
         sims_to_run -= batch_size 
     pbar.close()
+
     print("--- total program time: %s seconds ---" % (time.time() - total_start_time))
     #   plot
     print("--- saving plot... ----")
     date = plot()
     print("-------- done ---------")
-    f = open(f"./plot_energy/energy_data_{date}.py", "w")
+    f = open(f"./outputs/energy_data/energy_data_{date}.py", "w")
     f.write("e = " + str(all_e) + "\n")
     f.write("s = " + str(all_sols))
     f.close()
