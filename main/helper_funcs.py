@@ -11,6 +11,7 @@ from pathlib import Path
 import time
 import os
 import math
+import numpy as np
 
 def get_out_path(prob):
     #create dir and write path
@@ -25,20 +26,26 @@ def get_out_path(prob):
         os.mkdir(out_path)
     return(out_path)
 
-def write_data(success_rate,all_e,all_sols,sim_setup,prob,out_dir) -> None:
-    metadata_w_file = ('RBM_metadata.txt').replace(" ","")
-    f = open( Path( out_dir / metadata_w_file)  ,'a')
-    if sim_setup is not None:
-        f.write(sim_setup + "\n\n")
-    if success_rate is not None:
-        f.write(f"success rate: {success_rate}%\n" )
+def write_data(all_e,all_sols,out_dir) -> None:
+    data_w_file = 'RBM_energy_and_sols.npy' 
+    f = open( Path( out_dir / data_w_file ) , "ab")
+    np.save(f,all_e)
+    np.save(f,all_sols)
     f.close()
-    if all_e is not None or all_sols is not None:
-        es_w_file = ('RBM_energy_and_sols.py').replace(" ","") 
-        f = open( Path( out_dir / es_w_file ) , "a")
-        f.write("e = " + str(all_e) + "\n")
-        f.write("s = " + str(all_sols) + "\n")
-        f.close()
+
+def write_setup(sim_setup,out_dir) -> None:
+    metadata_w_file = 'RBM_metadata.txt'
+    f = open( Path( out_dir / metadata_w_file)  ,'a')
+    f.write(sim_setup)
+    f.close()
+
+def write_success(success_rate,out_dir):
+    metadata_w_file = 'RBM_success_rates.txt'
+    f = open( Path( out_dir / metadata_w_file)  ,'a')
+    f.write(f"success rate: {success_rate}%\n" )
+    f.write(f"#####\n" )
+    f.close()
+
 
 def get_simulation_setup(batch_size, a) -> None:
     total_iters,prob,g_dev_sig,g_cyc_sig,mag_dev_sig,\
@@ -50,18 +57,18 @@ def get_simulation_setup(batch_size, a) -> None:
     else:
         run_time_str = f"{math.ceil(est_run_time)} minutes"
         
-    sim_setup = (f"====================================================\n\
-          \r---------- starting parallel {prob} SA sim with:\n\
-            {cb_array.device_type} CB array\n\
-            Amplif. factor {scale:3.0e}\n\
-            {total_iters} total iterations\n\
-            {iter_per_temp} iteration(s) per temp\n\
-            {Jsot_steps} temp steps\n\
-            MTJ device deviation = {mag_dev_sig}\n\
-            G device deviation   = {g_dev_sig}\n\
-            G cycle deviation    = {g_cyc_sig}\n\
-          \r---------- estimated run time:  {run_time_str}\n\
-          \r====================================================")
+    sim_setup = (f"========================================\n\
+--- starting parallel {prob} SA sim with:\n\
+{cb_array.device_type} CB array\n\
+Amplif. factor {scale:3.0e}\n\
+{total_iters} total iterations\n\
+{iter_per_temp} iteration(s) per temp\n\
+{Jsot_steps} temp steps\n\
+MTJ device deviation = {mag_dev_sig}\n\
+G device deviation   = {g_dev_sig}\n\
+G cycle deviation    = {g_cyc_sig}\n\
+--- estimated run time:  {run_time_str}\n\
+===============================\n")
     return sim_setup
 
 def get_success_rate(all_sols, prob) -> float:
@@ -78,14 +85,11 @@ def get_success_rate(all_sols, prob) -> float:
             correct += 1
     return (correct/len(final_sols))*100
 
-def my_hist(sols,num_iter,prob,g_dev_sig,g_cyc_sig,mag_dev_sig,cb_array,scale,iter_per_temp,Jsot_steps,out_path, di = None) -> str:
+def my_hist(sols,num_iter,prob,g_dev_sig,g_cyc_sig,mag_dev_sig,cb_array,scale,iter_per_temp,Jsot_steps,out_path) -> str:
     # =================================
     # ===== Graphing of Histogram =====
     # =================================
-    if di is None:
-        plot_w_file = ('RBM_Hist.svg').replace(" ","") 
-    else:
-        plot_w_file = (f'RBM_Hist_{di}.svg').replace(" ","") 
+    plot_w_file = (f'Hist_{prob}_Gdd{g_dev_sig}_Gcc{g_cyc_sig}_Ndd{mag_dev_sig}_Js{Jsot_steps}_i{iter_per_temp}.svg').replace(" ","") 
     w_path = Path( out_path / plot_w_file)
 
     bar_col = 'cadetblue' # burnt orange lol
