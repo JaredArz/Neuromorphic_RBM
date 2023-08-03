@@ -12,7 +12,7 @@ import time
 import os
 import math
 
-def handle_out_path(prob):
+def get_out_path(prob):
     #create dir and write path
     date_fine = datetime.now().strftime("%m-%d_%H:%M:%S")
     date_session = datetime.now().strftime("%m-%d")
@@ -23,20 +23,22 @@ def handle_out_path(prob):
         os.mkdir(session_dir)
     if not os.path.isdir(out_path):
         os.mkdir(out_path)
-    plot_w_file = ('RBM_Hist.svg').replace(" ","") 
-    plot_w_path = Path( out_path / plot_w_file)
-    return(plot_w_path,out_path)
+    return(out_path)
 
-def write_data(all_e,all_sols,sim_setup,prob,out_dir) -> None:
-    es_w_file = ('RBM_energy_and_sols.py').replace(" ","") 
-    f = open( Path( out_dir / es_w_file ) , "w")
-    f.write("e = " + str(all_e) + "\n")
-    f.write("s = " + str(all_sols))
+def write_data(success_rate,all_e,all_sols,sim_setup,prob,out_dir) -> None:
+    metadata_w_file = ('RBM_metadata.txt').replace(" ","")
+    f = open( Path( out_dir / metadata_w_file)  ,'a')
+    if sim_setup is not None:
+        f.write(sim_setup + "\n\n")
+    if success_rate is not None:
+        f.write(f"success rate: {success_rate}%\n" )
     f.close()
-    setup_w_file = ('RBM_setup.txt').replace(" ","")
-    f = open( Path( out_dir / setup_w_file)  ,'w')
-    f.write(sim_setup)
-    f.close()
+    if all_e is not None or all_sols is not None:
+        es_w_file = ('RBM_energy_and_sols.py').replace(" ","") 
+        f = open( Path( out_dir / es_w_file ) , "a")
+        f.write("e = " + str(all_e) + "\n")
+        f.write("s = " + str(all_sols) + "\n")
+        f.close()
 
 def get_simulation_setup(batch_size, a) -> None:
     total_iters,prob,g_dev_sig,g_cyc_sig,mag_dev_sig,\
@@ -62,11 +64,30 @@ def get_simulation_setup(batch_size, a) -> None:
           \r====================================================")
     return sim_setup
 
-def my_hist(sols,num_iter,prob,g_dev_sig,g_cyc_sig,mag_dev_sig,cb_array,scale,iter_per_temp,Jsot_steps) -> str:
+def get_success_rate(all_sols, prob) -> float:
+    final_sols = [ elem[-1] for elem in all_sols ]
+    correct = 0
+    if prob == "Max Sat":
+        sol_one = 28
+        sol_two = 21
+    elif prob == "Max Cut":
+        pass
+        #FIXME
+    for s in final_sols:
+        if (s == sol_one) or (s == sol_two):
+            correct += 1
+    return (correct/len(final_sols))*100
+
+def my_hist(sols,num_iter,prob,g_dev_sig,g_cyc_sig,mag_dev_sig,cb_array,scale,iter_per_temp,Jsot_steps,out_path, di = None) -> str:
     # =================================
     # ===== Graphing of Histogram =====
     # =================================
-    w_path,out_dir = handle_out_path(prob)
+    if di is None:
+        plot_w_file = ('RBM_Hist.svg').replace(" ","") 
+    else:
+        plot_w_file = (f'RBM_Hist_{di}.svg').replace(" ","") 
+    w_path = Path( out_path / plot_w_file)
+
     bar_col = 'cadetblue' # burnt orange lol
     sol_highlight = "red"
     #=====================================================================
@@ -106,7 +127,6 @@ def my_hist(sols,num_iter,prob,g_dev_sig,g_cyc_sig,mag_dev_sig,cb_array,scale,it
     else:
         print("invalid input... saving figure just in case")
         plt.savefig(w_path,format='svg')
-    return out_dir
 
 def unpack(a):
     total_iters = a["total_iters"]

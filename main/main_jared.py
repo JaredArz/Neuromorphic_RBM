@@ -1,6 +1,7 @@
 import matplotlib.pyplot as plt
 import random as rnd
 import numpy as np
+from pathlib import Path
 
 from   mtj_types import SHE_MTJ_rng
 import RRAM_types
@@ -17,9 +18,10 @@ import os
 #-Controlled Magnetic Anisotropy and Spin Orbit Torque Magnetic Tunnel Junctions 
 
 def main():
+    # =======================================================================
     prob = "Max Sat"
     #NOTE: these values are found to work well --jared
-    total_iters = 500  #Number of Simulations to Run
+    total_iters = 10  #Number of Simulations to Run
     iter_per_temp = 3
     Jsot_steps = 64
 
@@ -29,28 +31,63 @@ def main():
     #0.1, 0.25 works nicely for RRAM HfHfO2
     g_dev_sig  = 0       # device to device variation
     g_cyc_sig  = 0       # cycle to cycle variation 
-    mag_dev_sig = 0
+    mag_dev_sig = 1
+    single_overwrite_flag = True
+    multi_overwrite_flag = False
+    # =======================================================================
+    # =======================================================================
+    # =======================================================================
 
+    batch_size = os.cpu_count() 
     a = {"total_iters": total_iters,"prob":prob,
          "g_dev_sig": g_dev_sig, "g_cyc_sig":g_cyc_sig,
          "mag_dev_sig":mag_dev_sig,"cb_array":cb_array,
          "iter_per_temp":iter_per_temp,"Jsot_steps":Jsot_steps}
 
-    #\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\
-    total_start_time = time.time()
-    batch_size = os.cpu_count() 
     sim_setup = h.get_simulation_setup(batch_size, a)
     print(sim_setup)
-    sols,all_sols,all_e = p.run_in_batch(SA,batch_size,a)
+    out_path = h.get_out_path(a["prob"])
 
+    total_start_time = time.time()
+    not_dev_var = bool(g_dev_sig == 0 and mag_dev_sig == 0)
+    if ( not_dev_var and not multi_overwrite_flag ) or (single_overwrite_flag and not multi_overwrite_flag):
+        sols,all_sols,all_e = p.run_in_batch(SA,batch_size,a)
+        success_rate = h.get_success_rate(all_sols,prob)
+        print(f"--- success rate: {success_rate}% ---")
+        print("--- saving plot... ----")
+        plot_wrapper(sols,a,out_path)
+        print("--- writing metadata... ---------")
+        h.write_data(success_rate,all_e,all_sols,sim_setup,prob,out_path)
+        print("-------- done ---------")
+    elif (not not_dev_var and not single_overwrite_flag ) or (multi_overwrite_flag and not single_overwrite_flag):
+        # ============= Run SA {dev_iter} number of times to observe the effects of dev-to-dev variation
+        dev_iter = 10
+        h.write_data(None,None,None,sim_setup,a["prob"],out_path)
+        wrap_sim_with_dev_var(dev_iter,batch_size,a,out_path)
+    else:
+        print("flag error")
+        exit()
     print("--- total program time: %s seconds ---" % (time.time() - total_start_time))
-    print("--- saving plot... ----")
-    out_dir = plot(sols,a)
-    print("--- writing metadata... ---------")
-    h.write_data(all_e,all_sols,sim_setup,prob,out_dir)
-    print("-------- done ---------")
 
-
+def wrap_sim_with_dev_var(dev_iter,batch_size,a,out_path):
+    print(f"--- running {dev_iter} device samples... ---")
+    print("--- this will take a while... ---")
+    success_rate_list = []
+    for i in range(dev_iter):
+        sols,all_sols,all_e = p.run_in_batch(SA,batch_size,a)
+        success_rate = h.get_success_rate(all_sols,a["prob"])
+        success_rate_list.append(success_rate)
+        print(f"--- success rate {i}: {success_rate}% ---")
+        plot_wrapper(sols, a, out_path, i)
+        h.write_data(success_rate,all_e,all_sols,None,a["prob"],out_path)
+    std_dev = np.std(success_rate_list)
+    mean = np.average(success_rate_list)
+    dev_file = "device_iterations.txt"
+    f = open( Path( out_path / dev_file ), 'w' )
+    f.write(f"success rates are across {dev_iter} sims with MTJ or CB array dev-to-dev variation\n")
+    f.write(f"mean: {mean}\n")
+    f.write(f"std dev. {std_dev}\n")
+    f.close()
 
 
 def SA(a, sol_queue,sol_hist_queue,e_hist_queue):
@@ -147,13 +184,11 @@ def SA(a, sol_queue,sol_hist_queue,e_hist_queue):
     sol_hist_queue.put(solution_history)
     e_hist_queue.put(energy_history)
 
-
-def plot(sols,a):
+def plot_wrapper(sols,a,out_path,di = None):
     total_iters,prob,g_dev_sig,g_cyc_sig,mag_dev_sig,\
             cb_array,scale,iter_per_temp,Jsot_steps = h.unpack(a)
-    date_sync = h.my_hist(sols,total_iters,prob,g_dev_sig,g_cyc_sig,mag_dev_sig,\
-                              cb_array,scale,iter_per_temp,Jsot_steps )
-    return date_sync
+    h.my_hist(sols,total_iters,prob,g_dev_sig,g_cyc_sig,mag_dev_sig,\
+                              cb_array,scale,iter_per_temp,Jsot_steps,out_path,di )
 
 
 if __name__ == "__main__":
