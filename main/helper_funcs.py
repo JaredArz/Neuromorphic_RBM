@@ -85,11 +85,14 @@ def get_success_rate(all_sols, prob) -> float:
             correct += 1
     return (correct/len(final_sols))*100
 
-def my_hist(sols,num_iter,prob,g_dev_sig,g_cyc_sig,mag_dev_sig,cb_array,scale,iter_per_temp,Jsot_steps,out_path) -> str:
+def my_hist(sols,num_iter,prob,g_dev_sig,g_cyc_sig,mag_dev_sig,cb_array,scale,iter_per_temp,Jsot_steps,out_path, dev_i=None) -> str:
     # =================================
     # ===== Graphing of Histogram =====
     # =================================
-    plot_w_file = (f'Hist_{prob}_Gdd{g_dev_sig}_Gcc{g_cyc_sig}_Ndd{mag_dev_sig}_Js{Jsot_steps}_i{iter_per_temp}.svg').replace(" ","") 
+    if dev_i is None:
+        plot_w_file = (f'Hist_{prob}_Gdd{g_dev_sig}_Gcc{g_cyc_sig}_Ndd{mag_dev_sig}_Js{Jsot_steps}_i{iter_per_temp}.svg').replace(" ","") 
+    else:
+        plot_w_file = (f'Hist_dev{dev_i}_{prob}_Gdd{g_dev_sig}_Gcc{g_cyc_sig}_Ndd{mag_dev_sig}_Js{Jsot_steps}_i{iter_per_temp}.svg').replace(" ","") 
     w_path = Path( out_path / plot_w_file)
 
     bar_col = 'cadetblue' # burnt orange lol

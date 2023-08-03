@@ -17,15 +17,15 @@ import os
 #REFERENCES: [1] Random Bitstream Generation using Voltage
 #-Controlled Magnetic Anisotropy and Spin Orbit Torque Magnetic Tunnel Junctions 
 
-dev_iter = 100
+dev_iter = 50
 def main():
     batch_size = os.cpu_count() 
     # =======================================================================
     prob = "Max Sat"
     #NOTE: these values are found to work well --jared, 3,50-150
-    total_iters = 10  #Number of Simulations to Run
-    iter_per_temp = 3
-    Jsot_steps = [5,10,25,64,100,250]
+    total_iters = 10000  #Number of Simulations to Run
+    iter_per_temp = 1
+    Jsot_steps = [5,10,25,64,100,200,300,400,500,750,1000]
 
     cb_array = RRAM_types.HfHfO2
 
@@ -69,10 +69,9 @@ def sim_with_dev_var(batch_size,a,out_path):
         success_rate = h.get_success_rate(all_sols,a["prob"])
         success_rate_list.append(success_rate)
         print(f"--- success rate {i}: {success_rate}% ---")
-        plot_wrapper(sols, a, out_path)
+        plot_wrapper(sols, a, out_path, i)
         h.write_data(all_e,all_sols,out_path)
         h.write_success(success_rate,out_path)
-    h.write_success(success_rate,out_path)
     std_dev = np.std(success_rate_list)
     mean = np.average(success_rate_list)
     dev_file = "device_iterations.txt"
@@ -193,11 +192,11 @@ def SA(a, sol_queue,sol_hist_queue,e_hist_queue):
     sol_hist_queue.put(solution_history)
     e_hist_queue.put(energy_history)
 
-def plot_wrapper(sols,a,out_path):
+def plot_wrapper(sols,a,out_path,dev_i=None):
     total_iters,prob,g_dev_sig,g_cyc_sig,mag_dev_sig,\
             cb_array,scale,iter_per_temp,Jsot_steps = h.unpack(a)
     h.my_hist(sols,total_iters,prob,g_dev_sig,g_cyc_sig,mag_dev_sig,\
-                              cb_array,scale,iter_per_temp,Jsot_steps,out_path)
+                              cb_array,scale,iter_per_temp,Jsot_steps,out_path,dev_i)
 
 if __name__ == "__main__":
     main()
