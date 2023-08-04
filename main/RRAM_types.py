@@ -30,7 +30,9 @@ class RRAM_dev:
 #HfHfO2    = RRAM_dev(1e5    ,1e6   ,5e13    ,0    ,0.375,0.375,"Memristor","intrinsic switching variability")
 #MTJ_INC   = RRAM_dev(1000    ,3000   ,1.25e12   ,0,0.25,0.05,"MTJ" ,"N/A")
 
+#FIXME: wass using this when it says 1e14
 HfHfO2    = RRAM_dev(1e5    ,1e6   ,1.25e14    ,0    ,0.375,0.375,"Memristor","intrinsic switching variability")
+#HfHfO2    = RRAM_dev(1e5    ,1e6   ,0.75e14    ,0    ,0.375,0.375,"Memristor","intrinsic switching variability")
 MTJ_INC   = RRAM_dev(1000    ,3000   ,1.25e12   ,0,0.25,0.05,"MTJ" ,"N/A")
 
 '''

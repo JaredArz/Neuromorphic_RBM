@@ -1,7 +1,7 @@
 import multiprocessing as mp
 from tqdm import tqdm
 
-def run_in_batch(func,batch_size, a):
+def run_in_batch(func,p,c,d):
     sols      = []
     all_sols  = []
     all_e     = []
@@ -10,7 +10,8 @@ def run_in_batch(func,batch_size, a):
     #   batches are sequential, that is, even if an open
     #   core is available, it wont run till the slowest
     #   process finishes. good enough for now though.
-    sims_to_run = a["total_iters"]
+    sims_to_run = c["total_iters"]
+    batch_size = c["batch_size"]
     pbar = tqdm(total=sims_to_run,ncols=80)
     while sims_to_run >= 1:        
         if sims_to_run < batch_size:
@@ -21,7 +22,7 @@ def run_in_batch(func,batch_size, a):
         processes = []
         #   create processes and start them
         for _ in range(batch_size):
-            sim = mp.Process(target=func, args=(a,sol_queue,all_sols_queue,all_e_queue))
+            sim = mp.Process(target=func, args=(p,c,d,sol_queue,all_sols_queue,all_e_queue))
             processes.append(sim)
             sim.start()
         #   waits for solution to be available
@@ -37,5 +38,8 @@ def run_in_batch(func,batch_size, a):
             sim.join()
         pbar.update(batch_size)
         sims_to_run -= batch_size 
+        for sim in processes:
+            sim.close()
     pbar.close()
     return sols, all_sols, all_e
+

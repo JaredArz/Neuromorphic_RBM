@@ -5,27 +5,42 @@
 # ==================================================================
 
 import matplotlib.pyplot as plt
-
 from datetime import datetime
 from pathlib import Path
+import numpy as np
 import gzip
 import time
 import os
 import math
-import numpy as np
 
-def get_out_path(prob):
+def get_out_path(c):
+    total_iters,_,_,prob,cb_array,_ = unpack_consts(c)
     #create dir and write path
     date_fine = datetime.now().strftime("%m-%d_%H:%M:%S")
     date_session = datetime.now().strftime("%m-%d")
     session_dir = Path(f"./outputs/RBM_sims_{date_session}")
-    out_dir = (prob + "_run_" + f"{date_fine}").replace(" ","")
+    out_dir = (f"{prob}_{total_iters}_{cb_array.device_type}_{date_fine}").replace(" ","")
     out_path =  session_dir / out_dir   
     if not os.path.isdir(session_dir):
         os.mkdir(session_dir)
     if not os.path.isdir(out_path):
         os.mkdir(out_path)
-    return(out_path)
+    return out_path
+
+def get_dev_path(param_path,dev_i):
+    dev_dir = (f"Dev_{dev_i}")
+    dev_path =  param_path / Path(dev_dir)
+    if not os.path.isdir(dev_path):
+        os.mkdir(dev_path)
+    return dev_path
+
+def get_param_path(out_path,p):
+    g_dev_sig,g_cyc_sig,mag_dev_sig,iter_per_temp,Jsot_steps = unpack_params(p)
+    param_dir = f'params_Gdd{g_dev_sig}_Gcc{g_cyc_sig}_Ndd{mag_dev_sig}_Js{Jsot_steps}_i{iter_per_temp}'
+    param_path =  out_path / Path(param_dir)
+    if not os.path.isdir(param_path):
+        os.mkdir(param_path)
+    return param_path
 
 def write_data(all_e,all_sols,out_dir) -> None:
     data_w_file = 'RBM_energy_and_sols.npy.gz' 
@@ -47,29 +62,30 @@ def write_success(success_rate,out_dir):
     f.write(f"#####\n" )
     f.close()
 
-
-def get_simulation_setup(batch_size, a) -> None:
-    total_iters,prob,g_dev_sig,g_cyc_sig,mag_dev_sig,\
-            cb_array,scale,iter_per_temp,Jsot_steps = unpack(a)
+def get_simulation_setup(p,c) -> None:
+    g_dev_sig,g_cyc_sig,mag_dev_sig,iter_per_temp,Jsot_steps = unpack_params(p)
+    total_iters,dev_iter,batch_size,prob,cb_array,scale = unpack_consts(c)
     single_sample_time = 0.0002182
-    est_run_time = (total_iters * single_sample_time * iter_per_temp * Jsot_steps)/((batch_size)/2.5 * 60)
+    est_run_time = (total_iters * single_sample_time * iter_per_temp * Jsot_steps)/((batch_size) * 60)
     if est_run_time < 1:
         run_time_str = "< 1 minute"
     else:
         run_time_str = f"{math.ceil(est_run_time)} minutes"
         
-    sim_setup = (f"========================================\n\
---- starting parallel {prob} SA sim with:\n\
-{cb_array.device_type} CB array\n\
-Amplif. factor {scale:3.0e}\n\
-{total_iters} total iterations\n\
-{iter_per_temp} iteration(s) per temp\n\
-{Jsot_steps} temp steps\n\
-MTJ device deviation = {mag_dev_sig}\n\
-G device deviation   = {g_dev_sig}\n\
-G cycle deviation    = {g_cyc_sig}\n\
---- estimated run time:  {run_time_str}\n\
-===============================\n")
+    sim_setup = (
+        f"========================================\n"
+        f"--- starting parallel {prob} SA sim with:\n"
+        f"{cb_array.device_type} CB array\n"
+        f"Amplif. factor {scale:.2e}\n"
+        f"{total_iters} total iterations\n"
+        f"{iter_per_temp} iteration(s) per temp\n"
+        f"{Jsot_steps} temp steps\n"
+        f"MTJ device deviation = {mag_dev_sig}\n"
+        f"G device deviation   = {g_dev_sig}\n"
+        f"G cycle deviation    = {g_cyc_sig}\n"
+        f"--- estimated run time:  {run_time_str}\n"
+        f"===============================\n"
+        )
     return sim_setup
 
 def get_success_rate(all_sols, prob) -> float:
@@ -86,14 +102,21 @@ def get_success_rate(all_sols, prob) -> float:
             correct += 1
     return (correct/len(final_sols))*100
 
-def my_hist(sols,num_iter,prob,g_dev_sig,g_cyc_sig,mag_dev_sig,cb_array,scale,iter_per_temp,Jsot_steps,out_path, dev_i=None) -> str:
+def get_scale(prob,cb_array) -> float:
+    if prob == "Max Sat":
+        scale  = cb_array.Max_Sat_amp
+    elif prob == "Max Cut":
+        scale  = cb_array.Max_Cut_amp 
+    return scale
+
+def my_hist(sols,p,c,out_path) -> str:
     # =================================
     # ===== Graphing of Histogram =====
     # =================================
-    if dev_i is None:
-        plot_w_file = (f'Hist_{prob}_Gdd{g_dev_sig}_Gcc{g_cyc_sig}_Ndd{mag_dev_sig}_Js{Jsot_steps}_i{iter_per_temp}.svg').replace(" ","") 
-    else:
-        plot_w_file = (f'Hist_dev{dev_i}_{prob}_Gdd{g_dev_sig}_Gcc{g_cyc_sig}_Ndd{mag_dev_sig}_Js{Jsot_steps}_i{iter_per_temp}.svg').replace(" ","") 
+    g_dev_sig,g_cyc_sig,mag_dev_sig,iter_per_temp,Jsot_steps = unpack_params(p)
+    num_iter,dev_iter,batch_size,prob,cb_array,scale = unpack_consts(c)
+
+    plot_w_file = (f'Hist_RBM_{prob}.svg').replace(" ","") 
     w_path = Path( out_path / plot_w_file)
 
     bar_col = 'cadetblue' # burnt orange lol
@@ -118,8 +141,8 @@ def my_hist(sols,num_iter,prob,g_dev_sig,g_cyc_sig,mag_dev_sig,cb_array,scale,it
     plt.xlabel('Value')
     plt.ylabel('Frequency')
     plt.title(prob + ' Solution Frequency Over ' + str(num_iter) + ' Iterations')
-    plt.annotate(f"Amplification: {(scale):3.0e}",xy = (275,280), xycoords='figure points')
-    plt.annotate(f"Num steps {Jsot_steps}", xy = (275,270),xycoords='figure points')
+    plt.annotate(f"Amplification: {(scale):.2e}",xy = (275,280), xycoords='figure points')
+    plt.annotate(f"Num steps {Jsot_steps}   ", xy = (275,270),xycoords='figure points')
     plt.annotate(f"Iters per step {iter_per_temp}", xy = (275,260),xycoords='figure points')
     plt.annotate(f"MTJ dev-to-dev  σ {mag_dev_sig}", xy = (275,250),xycoords='figure points')
     plt.annotate(f"CBA dev-to-dev σ {g_dev_sig}", xy = (275,240),xycoords='figure points')
@@ -136,19 +159,21 @@ def my_hist(sols,num_iter,prob,g_dev_sig,g_cyc_sig,mag_dev_sig,cb_array,scale,it
         print("invalid input... saving figure just in case")
         plt.savefig(w_path,format='svg')
 
-def unpack(a):
-    total_iters = a["total_iters"]
-    prob        = a["prob"]
-    g_dev_sig   = a["g_dev_sig"]
-    g_cyc_sig   = a["g_cyc_sig"]
-    mag_dev_sig = a["mag_dev_sig"]
-    cb_array    = a["cb_array"]
-    iter_per_temp = a["iter_per_temp"]
-    Jsot_steps  = a["Jsot_steps"]
+def unpack_params(p):
+    g_dev_sig     = p["g_dev_sig"]
+    g_cyc_sig     = p["g_cyc_sig"]
+    mag_dev_sig   = p["mag_dev_sig"]
+    iter_per_temp = p["iter_per_temp"]
+    Jsot_steps    = p["Jsot_steps"]
     g_dev_out = (cb_array.base_dev_stdd if(g_dev_sig is None) else(g_dev_sig))
     g_cyc_out = (cb_array.base_cyc_stdd if(g_cyc_sig is None) else(g_cyc_sig))
-    if prob == "Max Sat":
-        scale  = cb_array.Max_Sat_amp
-    elif prob == "Max Cut":
-        scale  = cb_array.Max_Cut_amp 
-    return total_iters,prob,g_dev_out,g_cyc_out,mag_dev_sig,cb_array,scale,iter_per_temp,Jsot_steps
+    return g_dev_out,g_cyc_out,mag_dev_sig,iter_per_temp,Jsot_steps
+
+def unpack_consts(c):
+    total_iters = c["total_iters"]
+    dev_iter    = c["dev_iter"]
+    batch_size  = c["batch_size"]
+    prob        = c["prob"]
+    cb_array    = c["cb_array"]
+    scale       = c["scale"]
+    return total_iters,dev_iter,batch_size,prob,cb_array,scale
