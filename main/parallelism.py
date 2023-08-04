@@ -1,7 +1,7 @@
 import multiprocessing as mp
 from tqdm import tqdm
 
-def run_in_batch(func,p,c,d):
+def run_in_batch(func,p,c,Edges,devs):
     sols      = []
     all_sols  = []
     all_e     = []
@@ -22,7 +22,7 @@ def run_in_batch(func,p,c,d):
         processes = []
         #   create processes and start them
         for _ in range(batch_size):
-            sim = mp.Process(target=func, args=(p,c,d,sol_queue,all_sols_queue,all_e_queue))
+            sim = mp.Process(target=func, args=(p,c,Edges,devs,sol_queue,all_sols_queue,all_e_queue))
             processes.append(sim)
             sim.start()
         #   waits for solution to be available

@@ -66,7 +66,7 @@ def get_simulation_setup(p,c) -> None:
     g_dev_sig,g_cyc_sig,mag_dev_sig,iter_per_temp,Jsot_steps = unpack_params(p)
     total_iters,dev_iter,batch_size,prob,cb_array,scale = unpack_consts(c)
     single_sample_time = 0.0002182
-    est_run_time = (total_iters * single_sample_time * iter_per_temp * Jsot_steps)/((batch_size) * 60)
+    est_run_time = (total_iters * single_sample_time * iter_per_temp * Jsot_steps)/((batch_size)/3 * 60)
     if est_run_time < 1:
         run_time_str = "< 1 minute"
     else:
@@ -171,9 +171,9 @@ def unpack_params(p):
 
 def unpack_consts(c):
     total_iters = c["total_iters"]
-    dev_iter    = c["dev_iter"]
+    num_devs    = c["num_devs"]
     batch_size  = c["batch_size"]
     prob        = c["prob"]
     cb_array    = c["cb_array"]
     scale       = c["scale"]
-    return total_iters,dev_iter,batch_size,prob,cb_array,scale
+    return total_iters,num_devs,batch_size,prob,cb_array,scale

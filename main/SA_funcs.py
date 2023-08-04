@@ -7,7 +7,14 @@ import copy
 import itertools as it
 import helper_funcs as h
 
-def SetDevice(g_dev_sig,g_cyc_sig,mag_dev_sig,prob,cb_array):
+def SetMTJs(mag_dev_sig):
+    thetas    = np.full(6,np.pi/2)
+    phis      = np.ones_like(thetas)*np.random.uniform(0,2*np.pi,size=np.shape(thetas))
+    devs = [ SHE_MTJ_rng(thetas[i], phis[i], mag_dev_sig) for i in range(6)]
+
+    return devs
+
+def SetCBA(g_dev_sig,g_cyc_sig,prob,cb_array):
     if prob == "Max Sat":
         Edges = np.array([[-5, -1, -1, 10, -1, -1], 
                           [-1, -7, -2, -2, 10, -1],
@@ -38,24 +45,16 @@ def SetDevice(g_dev_sig,g_cyc_sig,mag_dev_sig,prob,cb_array):
     gmin = 1.0/cb_array.HRS
     gmax = 1.0/cb_array.LRS
     Edges = (( (Edges-np.min(Edges)/(np.max(Edges)-np.min(Edges)))*(gmax-gmin))+gmin )
-    Edges_base = inject_add_dev_var(Edges,cb_array,g_dev_sig)
-    #FIXME: may be wrong
-    Edges = copy.deepcopy(Edges_base)
+    Edges = inject_add_dev_var(Edges,cb_array,g_dev_sig)
 
-    thetas    = np.full(6,np.pi/2)
-    phis      = np.ones_like(thetas)*np.random.uniform(0,2*np.pi,size=np.shape(thetas))
-    devs = [ SHE_MTJ_rng(thetas[i], phis[i], mag_dev_sig) for i in range(6)]
+    return Edges
 
-    d = {"Edges":Edges, "Edges_base":Edges_base, "devs":devs }
-    return d
-
-def SA(p,c,d, sol_queue,sol_hist_queue,e_hist_queue):
+def SA(p,c, Edges,devs, sol_queue,sol_hist_queue,e_hist_queue):
     _,g_cyc_sig,_,iter_per_temp,Jsot_steps = h.unpack_params(p)
     _,_,_,_,cb_array,scale = h.unpack_consts(c)
 
-    Edges = d["Edges"]
-    Edges_base = d["Edges_base"]
-    devs = d["devs"]
+    Edges_base = copy.deepcopy(Edges)
+
     # ================ annealing schedule ====================
     # === values from [1] ===
     Jsot_max    = 5e11      #

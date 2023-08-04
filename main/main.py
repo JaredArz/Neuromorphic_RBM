@@ -5,7 +5,7 @@ from pathlib import Path
 
 import RRAM_types
 import helper_funcs as h
-from SA_funcs  import SA,SetDevice
+from SA_funcs  import SA,SetMTJs,SetCBA
 import parallelism as parallel
 
 import time
@@ -17,46 +17,29 @@ import os
 
 # Global ==================
 total_iters = 10
-dev_iter = 1
-batch_size = os.cpu_count() 
+num_devs = 15
+CBA_is_dev  = True
+MTJs_is_dev = False
+batch_size = 3*os.cpu_count() 
 prob = "Max Sat"
 cb_array  = RRAM_types.HfHfO2
-# == ==================
+# ====================
 
 def main():
     # ========================= sweeping parameters ==============================
-    iter_per_temp = [1]  # 3 works well
-    Jsot_steps    = [10]  # 150 works well -- jared
+    iter_per_temp = [3]  # 3 works well
+    Jsot_steps    = [150]  # 150 works well -- jared
     # None uses default values fpr g_dev and g_cyc
     #0.1, 0.25 works nicely for RRAM HfHfO2
-    g_dev_sig   = [0]       # device to device variation
+    g_dev_sig   = [0.375]       # device to device variation
     g_cyc_sig   = [0]       # cycle to cycle variation 
-    mag_dev_sig = [1]
-
-
-    # =============================================================================
-    # total_iters will define how many simulations to run with the same device.
-    # these flags can be set to force single or multiple device operation
-    single_flag = False
-    multi_flag = False
+    mag_dev_sig = [True]
 
 
     # ====================  constants, named list  =============================
-    c = {"total_iters":total_iters, "dev_iter": dev_iter,
+    c = {"total_iters":total_iters, "num_devs": num_devs,
             "cb_array":cb_array,"scale": h.get_scale(prob,cb_array), "prob":prob,"batch_size": batch_size}
 
-
-
-    # ==================== set single or multi device operation ======================
-    # ==================== i.e. nest the entire simulation across devices or not
-    dev_var_bool = bool(g_dev_sig != 0 or mag_dev_sig != 0)
-    if ( not dev_var_bool and not multi_flag ) or (single_flag and not multi_flag):
-        sim_wrapper = sim_single_dev
-    elif (dev_var_bool and not single_flag ) or (multi_flag and not single_flag):
-        sim_wrapper = sim_multi_dev
-    else:
-        print("flag error")
-        exit()
 
     # ========================== sweep ==================================
     out_path = h.get_out_path(c)
@@ -78,14 +61,19 @@ def main():
     # //////////////////////////////////////////////////////////////////////////////
 
 
-def sim_multi_dev(p,c,parent_path):
-    print(f"--- running {dev_iter} device samples... ---")
-    print("--- this will take a while... ---")
+def sim_wrapper(p,c,parent_path):
+    print(f"--- running {num_devs} device samples... ---")
     success_rate_list = []
-    d = SetDevice(p["g_dev_sig"],p["g_cyc_sig"],p["mag_dev_sig"],c["prob"],c["cb_array"])
-    for dev_i in range(dev_iter):
+    # redundant iff. CBA and MTJ are both device
+    Edges = SetCBA(p["g_dev_sig"],p["g_cyc_sig"],c["prob"],c["cb_array"])
+    devs = SetMTJs(p["mag_dev_sig"])
+    for dev_i in range(num_devs):
+        if CBA_is_dev:
+            Edges = SetCBA(p["g_dev_sig"],p["g_cyc_sig"],c["prob"],c["cb_array"])
+        if MTJs_is_dev:
+            devs = SetMTJs(p["mag_dev_sig"])
         dev_path = h.get_dev_path(parent_path,dev_i)
-        sols,all_sols,all_e = parallel.run_in_batch(SA,p,c,d)
+        sols,all_sols,all_e = parallel.run_in_batch(SA,p,c,Edges,devs)
         success_rate = h.get_success_rate(all_sols,c["prob"])
         success_rate_list.append(success_rate)
         print(f"--- success rate {dev_i}: {success_rate}% ---")
@@ -96,19 +84,17 @@ def sim_multi_dev(p,c,parent_path):
     mean = np.average(success_rate_list)
     dev_file = "device_iterations.txt"
     f = open( Path( parent_path / dev_file ), 'w' )
-    f.write(f"success rates are across one device simulated {dev_iter} times (either MTJ or CB array dev-to-dev variation enabled)\n")
-    f.write(f"mean: {mean}\n")
-    f.write(f"std dev. {std_dev}\n")
+    w_str = (f"success rates are across {num_devs} devices)\n"
+             f"In this sim ==============================\n"
+             f"MTJ varied across these rates: {MTJs_is_dev}\n"
+             f"CBA varied across these rates': {CBA_is_dev}\n"
+             f"mean: {mean}\n"
+             f"std dev. {std_dev}\n"
+             f"High: {np.max(success_rate_list)}\n"
+             f"Low:  {np.min(success_rate_list)}\n"
+            )
+    f.write(w_str)
     f.close()
-
-def sim_single_dev_(p,c,parent_path):
-    d = SetDevice(p["g_dev_sig"],p["g_cyc_sig"],p["mag_dev_sig"],c["prob"],c["cb_array"])
-    sols,all_sols,all_e = parallel.run_in_batch(SA,p,c,d)
-    success_rate = h.get_success_rate(all_sols,c["prob"])
-    print(f"--- success rate: {success_rate}% ---")
-    h.my_hist(sols,p,c,parent_path)
-    h.write_data(all_e,all_sols,parent_path)
-    h.write_success(success_rate,parent_path)
 
 
 if __name__ == "__main__":
