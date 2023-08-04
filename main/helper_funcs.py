@@ -8,6 +8,7 @@ import matplotlib.pyplot as plt
 
 from datetime import datetime
 from pathlib import Path
+import gzip
 import time
 import os
 import math
@@ -27,8 +28,8 @@ def get_out_path(prob):
     return(out_path)
 
 def write_data(all_e,all_sols,out_dir) -> None:
-    data_w_file = 'RBM_energy_and_sols.npy' 
-    f = open( Path( out_dir / data_w_file ) , "ab")
+    data_w_file = 'RBM_energy_and_sols.npy.gz' 
+    f = gzip.GzipFile(Path( out_dir / data_w_file ) , "a")
     np.save(f,all_e)
     np.save(f,all_sols)
     f.close()

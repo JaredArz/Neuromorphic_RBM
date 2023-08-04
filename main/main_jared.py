@@ -19,7 +19,7 @@ import os
 
 dev_iter = 50
 def main():
-    batch_size = os.cpu_count() 
+    batch_size = 3*os.cpu_count() 
     # =======================================================================
     prob = "Max Sat"
     #NOTE: these values are found to work well --jared, 3,50-150
