@@ -4,6 +4,8 @@ import single_sample as f90
 from   mtj_types import SHE_MTJ_rng
 import numpy as np
 import copy
+import os
+import time
 import itertools as it
 import helper_funcs as h
 
@@ -11,7 +13,6 @@ def SetMTJs(mag_dev_sig):
     thetas    = np.full(6,np.pi/2)
     phis      = np.ones_like(thetas)*np.random.uniform(0,2*np.pi,size=np.shape(thetas))
     devs = [ SHE_MTJ_rng(thetas[i], phis[i], mag_dev_sig) for i in range(6)]
-
     return devs
 
 def SetCBA(g_dev_sig,g_cyc_sig,prob,cb_array):
@@ -55,6 +56,10 @@ def SA(p,c, Edges,devs, sol_queue,sol_hist_queue,e_hist_queue):
 
     Edges_base = copy.deepcopy(Edges)
 
+    #   all forked process inherit the same prng seed. 
+    #   manually setting with a mostly unique seed to avoid this determinism
+    np.random.seed((os.getpid() * int(time.time())) % 123456789)
+
     # ================ annealing schedule ====================
     # === values from [1] ===
     Jsot_max    = 5e11      #
@@ -94,9 +99,13 @@ def SA(p,c, Edges,devs, sol_queue,sol_hist_queue,e_hist_queue):
             #   once scaled, it's used as input for the array of MTJs
             #============================
             weighted = np.dot(Vertices, Edges)
-            Edges = inject_add_cyc_noise(Edges_base,cb_array,g_cyc_sig)
+            if g == iter_per_temp-1:
+                pass
+            else:
+                Edges = inject_add_cyc_noise(Edges_base,cb_array,g_cyc_sig)
         energy_history.append(Vertices @ Edges @ np.array(Vertices).T)
         solution_history.append(convertToDec(Vertices)) 
+        Edges = inject_add_cyc_noise(Edges_base,cb_array,g_cyc_sig)
         Teff -= Jsot_delta
     solution = convertToDec(Vertices)
     sol_queue.put(solution)

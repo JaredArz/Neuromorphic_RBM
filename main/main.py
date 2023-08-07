@@ -17,22 +17,22 @@ import os
 
 # Global ==================
 total_iters = 10
-num_devs = 15
+num_devs = 3
 CBA_is_dev  = True
-MTJs_is_dev = False
-batch_size = 3*os.cpu_count() 
+MTJs_is_dev = True
+batch_size = 2
 prob = "Max Sat"
 cb_array  = RRAM_types.HfHfO2
 # ====================
 
 def main():
     # ========================= sweeping parameters ==============================
-    iter_per_temp = [3]  # 3 works well
-    Jsot_steps    = [150]  # 150 works well -- jared
+    iter_per_temp = [1]  # 3 works well
+    Jsot_steps    = [1]  # 150 works well -- jared
     # None uses default values fpr g_dev and g_cyc
     #0.1, 0.25 works nicely for RRAM HfHfO2
-    g_dev_sig   = [0.375]       # device to device variation
-    g_cyc_sig   = [0]       # cycle to cycle variation 
+    g_dev_sig   = [0.25]       # device to device variation
+    g_cyc_sig   = [0.25]       # cycle to cycle variation 
     mag_dev_sig = [True]
 
 
@@ -63,7 +63,7 @@ def main():
 
 def sim_wrapper(p,c,parent_path):
     print(f"--- running {num_devs} device samples... ---")
-    success_rate_list = []
+    success_rate_list=[]
     # redundant iff. CBA and MTJ are both device
     Edges = SetCBA(p["g_dev_sig"],p["g_cyc_sig"],c["prob"],c["cb_array"])
     devs = SetMTJs(p["mag_dev_sig"])
