@@ -10,6 +10,7 @@ import matplotlib.pyplot as plt
 import scienceplots
 import gzip
 from pathlib import Path
+import os
 
 
 
@@ -31,6 +32,7 @@ def main():
     with open("temp.npy", 'rb') as f:
         all_e = np.load(f)
         all_s = np.load(f)
+    os.remove("temp.npy")
 
     avg_e = list(np.average(all_e,axis=0))
     end_sols = [ elem[-1] for elem in all_s]
