@@ -12,12 +12,12 @@ def run_in_batch(func,p,c,Edges,devs):
     #   process finishes. good enough for now though.
     sims_to_run = c["total_iters"]
     batch_size = c["batch_size"]
-    pbar = tqdm(total=sims_to_run,ncols=80)
+    #pbar = tqdm(total=sims_to_run,ncols=80)
     while sims_to_run >= 1:        
         if sims_to_run < batch_size:
             batch_size = sims_to_run
-        sol_queue = mp.Queue()  # parallel-safe queue
-        all_e_queue = mp.Queue()  # parallel-safe queue
+        sol_queue      = mp.Queue()  # parallel-safe queue
+        all_e_queue    = mp.Queue()  # parallel-safe queue
         all_sols_queue = mp.Queue()  # parallel-safe queue
         processes = []
         #   create processes and start them
@@ -36,10 +36,14 @@ def run_in_batch(func,p,c,Edges,devs):
         #   wait for all processes to wrap-up before continuing
         for sim in processes:
             sim.join()
-        pbar.update(batch_size)
+        #pbar.update(batch_size)
         sims_to_run -= batch_size 
         for sim in processes:
             sim.close()
-    pbar.close()
+        del sol_queue
+        del all_e_queue
+        del all_sols_queue
+    #pbar.close()
+    #del pbar
     return sols, all_sols, all_e
 

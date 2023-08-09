@@ -36,7 +36,7 @@ def get_dev_path(param_path,dev_i):
 
 def get_param_path(out_path,p):
     g_dev_sig,g_cyc_sig,mag_dev_sig,iter_per_temp,Jsot_steps,scale = unpack_params(p)
-    param_dir = f'params_Gdd{g_dev_sig}_Gcc{g_cyc_sig}_Ndd{mag_dev_sig}_Js{Jsot_steps}_i{iter_per_temp}'
+    param_dir = f'params_Js{Jsot_steps}_i{iter_per_temp}_Gdd{g_dev_sig}_Gcc{g_cyc_sig}_Ndd{mag_dev_sig}_s{scale:.2e}'
     param_path =  out_path / Path(param_dir)
     if not os.path.isdir(param_path):
         os.mkdir(param_path)
@@ -106,8 +106,10 @@ def my_hist(sols,p,c,out_path) -> str:
     # =================================
     # ===== Graphing of Histogram =====
     # =================================
-    g_dev_sig,g_cyc_sig,mag_dev_sig,iter_per_temp,Jsot_steps,scale = unpack_params(p)
-    num_iter,dev_iter,batch_size,prob,cb_array = unpack_consts(c)
+    #g_dev_sig,g_cyc_sig,mag_dev_sig,iter_per_temp,Jsot_steps,scale = unpack_params(p)
+    #total_iters,dev_iter,batch_size,prob,cb_array = unpack_consts(c)
+    total_iters = c["total_iters"]
+    prob = c["prob"]
 
     plot_w_file = (f'Hist_RBM_{prob}.svg').replace(" ","") 
     w_path = Path( out_path / plot_w_file)
@@ -129,17 +131,17 @@ def my_hist(sols,p,c,out_path) -> str:
         plt.gca().get_xticklabels()[4].set_color(sol_highlight)
         plt.gca().get_xticklabels()[7].set_color(sol_highlight)
     #======================================================================
-    plt.yticks(range(0, num_iter, int(num_iter/10)))
+    plt.yticks(range(0, total_iters, int(total_iters/10)))
     plt.hist(sols,bins=64,facecolor=bar_col)
     plt.xlabel('Value')
     plt.ylabel('Frequency')
-    plt.title(prob + ' Solution Frequency Over ' + str(num_iter) + ' Iterations')
-    plt.annotate(f"Amplification: {(scale):.2e}",xy = (275,280), xycoords='figure points')
-    plt.annotate(f"Num steps {Jsot_steps}   ", xy = (275,270),xycoords='figure points')
-    plt.annotate(f"Iters per step {iter_per_temp}", xy = (275,260),xycoords='figure points')
-    plt.annotate(f"MTJ dev-to-dev  σ {mag_dev_sig}", xy = (275,250),xycoords='figure points')
-    plt.annotate(f"CBA dev-to-dev σ {g_dev_sig}", xy = (275,240),xycoords='figure points')
-    plt.annotate(f"CBA cyc-to-cyc  σ {g_cyc_sig}", xy = (275,230),xycoords='figure points')
+    plt.title(prob + ' Solution Frequency Over ' + str(total_iters) + ' Iterations')
+    #plt.annotate(f"Amplification: {(scale):.2e}",xy = (275,280), xycoords='figure points')
+    #plt.annotate(f"Num steps {Jsot_steps}   ", xy = (275,270),xycoords='figure points')
+    #plt.annotate(f"Iters per step {iter_per_temp}", xy = (275,260),xycoords='figure points')
+    #plt.annotate(f"MTJ dev-to-dev  σ {mag_dev_sig}", xy = (275,250),xycoords='figure points')
+    #plt.annotate(f"CBA dev-to-dev σ {g_dev_sig}", xy = (275,240),xycoords='figure points')
+    #plt.annotate(f"CBA cyc-to-cyc  σ {g_cyc_sig}", xy = (275,230),xycoords='figure points')
     #plt.show()
     #print("Save figure? y/n")
     #user_input = input()
