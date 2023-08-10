@@ -21,6 +21,8 @@ def get_out_path(c):
     session_dir = Path(f"./outputs/RBM_sims_{date_session}")
     out_dir = (f"{prob}_{total_iters}_{cb_array.device_type}_{date_fine}").replace(" ","")
     out_path =  session_dir / out_dir   
+    if not os.path.isdir("./outputs"):
+        os.mkdir("./outputs")
     if not os.path.isdir(session_dir):
         os.mkdir(session_dir)
     if not os.path.isdir(out_path):

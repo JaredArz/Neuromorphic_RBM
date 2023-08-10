@@ -1,0 +1,5 @@
+  File "/scratch/09116/j_arzate/Git/Neuromorphic_RBM/main.py", line 50
+    check_repeat = lambda r: rs.add(r) if r not in run_strings else(continue)  
+srun: error: c314-043: task 0: Exited with exit code 1
+                                                                    ^
+SyntaxError: invalid syntax

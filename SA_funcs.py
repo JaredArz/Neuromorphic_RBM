@@ -9,47 +9,50 @@ import time
 import itertools as it
 import helper_funcs as h
 
+Max_Sat_Weights = np.array([[-5, -1, -1, 10, -1, -1], 
+                          [-1, -7, -2, -2, 10, -1],
+                          [-1, -2, -7, -2, -1, 10], 
+                          [10, -2, -2, -7, -1, -1],
+                          [-1, 10, -1, -1, -5, -1], 
+                          [-1, -1, 10, -1, -1, -5]])
+#Example Graph:
+#  0  1
+#  |/\|
+#  2  3     
+#  |/\|
+#  4  5
+#Solution is 110011/001100 = 51/12
+Max_Cut_Weights = np.array([[10,10,-1,-1,10,10], 
+                          [10,10,-1,-1,10,10], 
+                          [-1,-1,10,10,-1,-1], 
+                          [-1,-1,10,10,-1,-1], 
+                          [10,10,-1,-1,10,10], 
+                          [10,10,-1,-1,10,10]])
+
 def SetMTJs(mag_dev_sig):
     thetas    = np.full(6,np.pi/2)
     phis      = np.ones_like(thetas)*np.random.uniform(0,2*np.pi,size=np.shape(thetas))
     devs = [ SHE_MTJ_rng(thetas[i], phis[i], mag_dev_sig) for i in range(6)]
     return devs
 
+
 def SetCBA(g_dev_sig,prob,cb_array):
     if prob == "Max Sat":
-        Edges = np.array([[-5, -1, -1, 10, -1, -1], 
-                          [-1, -7, -2, -2, 10, -1],
-                          [-1, -2, -7, -2, -1, 10], 
-                          [10, -2, -2, -7, -1, -1],
-                          [-1, 10, -1, -1, -5, -1], 
-                          [-1, -1, 10, -1, -1, -5]])
+        Edges = Max_Sat_Weights
     elif prob == "Max Cut":
-        #Example Graph:
-        #  0  1
-        #  |/\|
-        #  2  3     
-        #  |/\|
-        #  4  5
-        #Solution is 110011/001100 = 51/12
-        Edges = np.array([[10,10,-1,-1,10,10], 
-                          [10,10,-1,-1,10,10], 
-                          [-1,-1,10,10,-1,-1], 
-                          [-1,-1,10,10,-1,-1], 
-                          [10,10,-1,-1,10,10], 
-                          [10,10,-1,-1,10,10]])
+        Edges = Max_Cut_Weights
     else:
         print("bad problem")
         exit()
-   
    
     # ========================== device init  ===============================
     gmin = 1.0/cb_array.HRS
     gmax = 1.0/cb_array.LRS
     Edges = (( (Edges-np.min(Edges)/(np.max(Edges)-np.min(Edges)))*(gmax-gmin))+gmin )
     Edges = inject_add_dev_var(Edges,cb_array,g_dev_sig)
-
     return Edges
 
+limit_current = lambda J: -6e9 if(J < -6e9) else( 6e9 if(J > 6e9) else J)
 def SA(p,c, Edges,devs, sol_queue,sol_hist_queue,e_hist_queue):
     _,g_cyc_sig,_,iter_per_temp,Jsot_steps,scale = h.unpack_params(p)
     cb_array = c["cb_array"]
@@ -67,7 +70,6 @@ def SA(p,c, Edges,devs, sol_queue,sol_hist_queue,e_hist_queue):
     # =======================
     Jsot_delta = ( Jsot_max - Jsot_min ) / Jsot_steps 
     # limit current according to [1]
-    limit_current = lambda J: -6e9 if(J < -6e9) else( 6e9 if(J > 6e9) else J)
     # ========================================================
 
 

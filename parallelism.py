@@ -47,3 +47,15 @@ def run_in_batch(func,p,c,Edges,devs):
     #del pbar
     return sols, all_sols, all_e
 
+
+def run_serial(func,p,c,Edges,devs):
+    sims_to_run = c["total_iters"]
+    batch_size = c["batch_size"]
+    while sims_to_run >= 1:
+        func(p,c,Edges,devs,[],[],[],0)
+        sims_to_run-=1
+    sols      = [1,2,3,4,5,6,7,8,9,10]
+    all_sols  = [[1,2,3,4,5,6,7,8,9,10] for i in  range(10)]
+    all_e  = [[1,2,3,4,5,6,7,8,9,10] for i in  range(10)]
+    return sols,all_sols,all_e
+
