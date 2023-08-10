@@ -16,7 +16,7 @@ import math
 def get_out_path(c):
     total_iters,_,_,prob,cb_array = unpack_consts(c)
     #create dir and write path
-    date_fine = datetime.now().strftime("%m-%d_%H:%M:%S")
+    date_fine = datetime.now().strftime("%H:%M:%S")
     date_session = datetime.now().strftime("%m-%d")
     session_dir = Path(f"./outputs/RBM_sims_{date_session}")
     out_dir = (f"{prob}_{total_iters}_{cb_array.device_type}_{date_fine}").replace(" ","")
@@ -38,14 +38,14 @@ def get_dev_path(param_path,dev_i):
 
 def get_param_path(out_path,p):
     g_dev_sig,g_cyc_sig,mag_dev_sig,iter_per_temp,Jsot_steps,scale = unpack_params(p)
-    param_dir = f'params_Js{Jsot_steps}_i{iter_per_temp}_Gdd{g_dev_sig}_Gcc{g_cyc_sig}_Ndd{mag_dev_sig}_s{scale:.2e}'
+    param_dir = f'p_Js{Jsot_steps}_i{iter_per_temp}_Gdd{g_dev_sig}_Gcc{g_cyc_sig}_Ndd{mag_dev_sig}_s{scale:.2e}'
     param_path =  out_path / Path(param_dir)
     if not os.path.isdir(param_path):
         os.mkdir(param_path)
     return param_path
 
-def write_data(all_e,all_sols,out_dir) -> None:
-    data_w_file = 'RBM_energy_and_sols.npy.gz' 
+def write_data(all_e,all_sols,out_dir,dev_i) -> None:
+    data_w_file = f'nrg_and_sols_d{dev_i}.npy.gz' 
     f = gzip.GzipFile(Path( out_dir / data_w_file ) , "a")
     np.save(f,all_e)
     np.save(f,all_sols)

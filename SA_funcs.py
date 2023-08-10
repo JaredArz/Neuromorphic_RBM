@@ -44,7 +44,7 @@ def SetCBA(g_dev_sig,prob,cb_array):
     else:
         print("bad problem")
         exit()
-   
+
     # ========================== device init  ===============================
     gmin = 1.0/cb_array.HRS
     gmax = 1.0/cb_array.LRS

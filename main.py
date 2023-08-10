@@ -18,12 +18,12 @@ from tqdm import tqdm
 #-Controlled Magnetic Anisotropy and Spin Orbit Torque Magnetic Tunnel Junctions 
 
 # Global ==================
-total_iters = 1000
-num_devs = 100
+total_iters = 1
+num_devs = 3
 CBA_is_dev  = True
 MTJs_is_dev = True
 parallel_flag = True
-batch_size = 128
+batch_size = 16
 prob = "Max Sat"
 cb_array  = RRAM_types.HfHfO2
 dev_file = "device_iterations.txt"
@@ -37,17 +37,21 @@ def main():
     Jsot_steps    = 150  # 150 works well -- jared
     # None uses default values fpr g_dev and g_cyc
     #0.1, 0.25 works nicely for RRAM HfHfO2
-    g_dev_sig   = [0.0,0.05,0.1,0.15,0.2,0.25,0.3,0.4,0.5]      
-    g_cyc_sig   = [0.0,0.05,0.1,0.15,0.2,0.25,0.3,0.4,0.5]
-    mag_dev_sig = [0.0,0.05,0.1]
-    scale = [0.75e14,1e14,1.25e14]
+    #g_dev_sig   = [0.0,0.05,0.1,0.15,0.2,0.25,0.3,0.4,0.5]      
+    #g_cyc_sig   = [0.0,0.05,0.1,0.15,0.2,0.25,0.3,0.4,0.5]
+    g_dev_sig   = [0.0]     
+    g_cyc_sig   = [0.0]
+    #mag_dev_sig = [0.0,0.05,0.1]
+    mag_dev_sig = [0.0]
+    #scale = [0.75e14,1e14,1.25e14]
+    scale = [0.75e14]
 
     # ====================  constants, named list  =============================
     c = {"total_iters":total_iters, "num_devs": num_devs,
          "cb_array":cb_array,"prob":prob,"batch_size": batch_size}
     out_path = h.get_out_path(c)
     run_strings = set()
-    check_repeat = lambda r: run_strings.add(r) if r not in run_strings else( continue )  
+    repeat_run = lambda r: False if(r not in run_strings) else( True )  
 
     # ========================== sweep ==================================
     total_start_time = time.time()
@@ -56,7 +60,9 @@ def main():
     Gcc = 0.0
     Mdd = 0.0
     for s in scale:
-        check_repeat(str(Gdd)+str(Gcc)+str(Mdd)+str(s))
+        r_str = (str(Gdd)+str(Gcc)+str(Mdd)+str(s))
+        if(repeat_run(r_str)): continue
+        else:run_strings.add(r_str)
         p = {"g_dev_sig": Gdd, "g_cyc_sig":Gcc,"mag_dev_sig":Mdd,
              "iter_per_temp":iter_per_temp,"Jsot_steps":Jsot_steps,"scale":s}
 
@@ -69,7 +75,9 @@ def main():
     Gcc = 0.0
     for s in scale:
         for Mdd in mag_dev_sig:
-            check_repeat(str(Gdd)+str(Gcc)+str(Mdd)+str(s))
+            r_str = (str(Gdd)+str(Gcc)+str(Mdd)+str(s))
+            if(repeat_run(r_str)): continue
+            else:run_strings.add(r_str)
             p = {"g_dev_sig": Gdd, "g_cyc_sig":Gcc,
                     "mag_dev_sig":Mdd,"iter_per_temp":iter_per_temp,"Jsot_steps":Jsot_steps,"scale":s}
             param_path = h.get_param_path(out_path,p)
@@ -81,7 +89,9 @@ def main():
     Mdd = 0.0
     for s in scale:
         for Gcc in g_cyc_sig:
-            check_repeat(str(Gdd)+str(Gcc)+str(Mdd)+str(s))
+            r_str = (str(Gdd)+str(Gcc)+str(Mdd)+str(s))
+            if(repeat_run(r_str)): continue
+            else:run_strings.add(r_str)
             p = {"g_dev_sig": Gdd, "g_cyc_sig":Gcc,
                     "mag_dev_sig":Mdd,"iter_per_temp":iter_per_temp,"Jsot_steps":Jsot_steps,"scale":s}
             param_path = h.get_param_path(out_path,p)
@@ -93,7 +103,9 @@ def main():
     Mdd = 0.0
     for s in scale:
         for Gdd in g_dev_sig:
-            check_repeat(str(Gdd)+str(Gcc)+str(Mdd)+str(s))
+            r_str = (str(Gdd)+str(Gcc)+str(Mdd)+str(s))
+            if(repeat_run(r_str)): continue
+            else:run_strings.add(r_str)
             p = {"g_dev_sig": Gdd, "g_cyc_sig":Gcc,
                     "mag_dev_sig":Mdd,"iter_per_temp":iter_per_temp,"Jsot_steps":Jsot_steps,"scale":s}
             param_path = h.get_param_path(out_path,p)
@@ -106,7 +118,9 @@ def main():
     for s in scale:
         for Mdd in mag_dev_sig:
             for Gcc in g_cyc_sig:
-                check_repeat(str(Gdd)+str(Gcc)+str(Mdd)+str(s))
+                r_str = (str(Gdd)+str(Gcc)+str(Mdd)+str(s))
+                if(repeat_run(r_str)): continue
+                else:run_strings.add(r_str)
                 p = {"g_dev_sig": Gdd, "g_cyc_sig":Gcc,
                         "mag_dev_sig":Mdd,"iter_per_temp":iter_per_temp,"Jsot_steps":Jsot_steps,"scale":s}
                 param_path = h.get_param_path(out_path,p)
@@ -118,7 +132,9 @@ def main():
     for s in scale:
         for Mdd in mag_dev_sig:
             for Gdd in g_dev_sig:
-                check_repeat(str(Gdd)+str(Gcc)+str(Mdd)+str(s))
+                r_str = (str(Gdd)+str(Gcc)+str(Mdd)+str(s))
+                if(repeat_run(r_str)): continue
+                else:run_strings.add(r_str)
                 p = {"g_dev_sig": Gdd, "g_cyc_sig":Gcc,
                         "mag_dev_sig":Mdd,"iter_per_temp":iter_per_temp,"Jsot_steps":Jsot_steps,"scale":s}
                 param_path = h.get_param_path(out_path,p)
@@ -145,14 +161,13 @@ def sim_wrapper(p,c,parent_path):
             Edges = SetCBA(p["g_dev_sig"],c["prob"],c["cb_array"])
         if MTJs_is_dev:
             devs = SetMTJs(p["mag_dev_sig"])
-        dev_path = h.get_dev_path(parent_path,dev_i)
         if parallel_flag:
             sols,all_sols,all_e = run_in_batch(SA,p,c,Edges,devs)
         else:
             sols,all_sols,all_e = run_serial(SA,p,c,Edges,devs)
         success_rate_list.append(h.get_success_rate(all_sols,c["prob"]))
         #NOTE: debug: print(f"--- success rate {dev_i}: {success_rate}% ---")
-        h.write_data(all_e,all_sols,dev_path)
+        h.write_data(all_e,all_sols,parent_path,dev_i)
     std_dev = np.std(success_rate_list)
     mean = np.average(success_rate_list)
     #==================================
@@ -165,10 +180,10 @@ def sim_wrapper(p,c,parent_path):
              f"Mean: {mean}\n"
              f"Std. dev: {std_dev}\n"
              f"High: {np.max(success_rate_list)}\n"
-             f"Low: {np.min(success_rate_list)}\n"
+             f"Low: {np.min(success_rate_list)}\n===== rates per device ======\n"
             )
     for dev_i in range(num_devs):
-        w_str += "Dev {dev_i}: success_rate_list[dev_i]\n"
+        w_str += f"Dev {dev_i}: {success_rate_list[dev_i]}\n"
         del devs[dev_i]
     f.write(w_str)
     f.close()
