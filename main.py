@@ -1,29 +1,26 @@
 import matplotlib.pyplot as plt
-
-import random as rnd
-import numpy as np
 from pathlib import Path
+import numpy as np
 
 import RRAM_types
 import helper_funcs as h
 from SA_funcs  import SA,SetMTJs,SetCBA
 from parallelism import run_in_batch,run_serial
 
-import time
-from datetime import datetime
-import os
 from tqdm import tqdm
+import time
+import os
 
 #REFERENCES: [1] Random Bitstream Generation using Voltage
 #-Controlled Magnetic Anisotropy and Spin Orbit Torque Magnetic Tunnel Junctions 
 
 # Global ==================
-total_iters = 1
-num_devs = 3
-CBA_is_dev  = True
-MTJs_is_dev = True
+total_iters = 1000
+num_devs    = 100
+CBA_is_dev    = True
+MTJs_is_dev   = True
 parallel_flag = True
-batch_size = 16
+batch_size = 128
 prob = "Max Sat"
 cb_array  = RRAM_types.HfHfO2
 dev_file = "device_iterations.txt"
@@ -70,6 +67,9 @@ def main():
         sim_setup  = h.get_simulation_setup(p,c)
         h.write_setup(sim_setup,param_path)
         sim_wrapper(p,c,param_path)
+    #FIXME:
+    print("--- total program time: %s seconds ---" % (time.time() - total_start_time))
+    exit()
 
     Gdd = 0.0
     Gcc = 0.0
@@ -184,7 +184,8 @@ def sim_wrapper(p,c,parent_path):
             )
     for dev_i in range(num_devs):
         w_str += f"Dev {dev_i}: {success_rate_list[dev_i]}\n"
-        del devs[dev_i]
+        for dev in devs:
+            del dev
     f.write(w_str)
     f.close()
     return 0

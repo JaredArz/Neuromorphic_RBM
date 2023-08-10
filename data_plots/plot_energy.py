@@ -12,14 +12,13 @@ import gzip
 from pathlib import Path
 import os
 
-
-
-#../outputs/RBM_sims_08-07/MaxSat_1000_Memristor_08-07_15:12:58/params_Gdd0.2_Gcc0.05_NddTrue_Js150_i3/Dev_4 
-
-
 data_file = 'RBM_energy_and_sols.npy.gz'
-path_to_data = Path( Path( output_path) / Path(session_dir) / Path(data_dir) / Path(param_dir) / Path(dev_dir) / Path(data_file) )
-
+path_to_data = Path(Path( output_path)\
+                    /Path(session_dir)\
+                    /Path(data_dir)   \
+                    /Path(param_dir)  \
+                    /Path(dev_dir)    \
+                    /Path(data_file))
 Jsot_max    = 5e11 
 Jsot_min    = 1e11   
 Jsot_steps = 150
@@ -42,7 +41,9 @@ def main():
     #6 is demonstrative, low to high
     sing_i = 5
     s_single = all_s[sing_i]
-    es = (all_e[12], all_e[18], all_e[5])
+    #es = (all_e[12], all_e[18], all_e[5])
+    ind=11
+    es = (all_e[ind])
 
     x = np.linspace(Jsot_min,Jsot_max,Jsot_steps)
 

@@ -53,7 +53,7 @@ def SetCBA(g_dev_sig,prob,cb_array):
     return Edges
 
 limit_current = lambda J: -6e9 if(J < -6e9) else( 6e9 if(J > 6e9) else J)
-def SA(p,c, Edges,devs, sol_queue,sol_hist_queue,e_hist_queue):
+def SA(p,c, Edges,devs, sol_queue,sol_hist_queue,e_hist_queue,parallel_flag):
     _,g_cyc_sig,_,iter_per_temp,Jsot_steps,scale = h.unpack_params(p)
     cb_array = c["cb_array"]
 
@@ -110,9 +110,12 @@ def SA(p,c, Edges,devs, sol_queue,sol_hist_queue,e_hist_queue):
         Edges = inject_add_cyc_noise(Edges_base,cb_array,g_cyc_sig)
         Teff -= Jsot_delta
     solution = convertToDec(Vertices)
-    sol_queue.put(solution)
-    sol_hist_queue.put(solution_history)
-    e_hist_queue.put(energy_history)
+    if parallel_flag:
+        sol_queue.put(solution)
+        sol_hist_queue.put(solution_history)
+        e_hist_queue.put(energy_history)
+    else:
+        return [],[],[]
 
 def convertToDec(args) -> int:
     #can take optionally a list or a numpy 2D matrix
