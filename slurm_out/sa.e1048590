@@ -1,0 +1,7 @@
+Traceback (most recent call last):
+  File "/scratch/09116/j_arzate/Git/Neuromorphic_RBM/main.py", line 7, in <module>
+    from SA_funcs  import SA,SetMTJs,SetCBA
+  File "/scratch/09116/j_arzate/Git/Neuromorphic_RBM/SA_funcs.py", line 3, in <module>
+    import single_sample as f90
+ModuleNotFoundError: No module named 'single_sample'
+srun: error: c306-019: task 0: Exited with exit code 1

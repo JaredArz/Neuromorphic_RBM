@@ -34,14 +34,10 @@ def main():
     Jsot_steps    = 150  # 150 works well -- jared
     # None uses default values fpr g_dev and g_cyc
     #0.1, 0.25 works nicely for RRAM HfHfO2
-    #g_dev_sig   = [0.0,0.05,0.1,0.15,0.2,0.25,0.3,0.4,0.5]      
-    #g_cyc_sig   = [0.0,0.05,0.1,0.15,0.2,0.25,0.3,0.4,0.5]
-    g_dev_sig   = [0.0]     
-    g_cyc_sig   = [0.0]
-    #mag_dev_sig = [0.0,0.05,0.1]
-    mag_dev_sig = [0.0]
-    #scale = [0.75e14,1e14,1.25e14]
-    scale = [0.75e14]
+    g_dev_sig   = [0.0,0.05,0.1,0.15,0.2,0.25,0.3,0.4,0.5]      
+    g_cyc_sig   = [0.0,0.05,0.1,0.15,0.2,0.25,0.3,0.4,0.5]
+    mag_dev_sig = [0.0,0.05,0.1]
+    scale = [0.75e14,1e14,1.25e14]
 
     # ====================  constants, named list  =============================
     c = {"total_iters":total_iters, "num_devs": num_devs,
@@ -52,6 +48,7 @@ def main():
 
     # ========================== sweep ==================================
     total_start_time = time.time()
+    '''
 
     Gdd = 0.0
     Gcc = 0.0
@@ -67,9 +64,6 @@ def main():
         sim_setup  = h.get_simulation_setup(p,c)
         h.write_setup(sim_setup,param_path)
         sim_wrapper(p,c,param_path)
-    #FIXME:
-    print("--- total program time: %s seconds ---" % (time.time() - total_start_time))
-    exit()
 
     Gdd = 0.0
     Gcc = 0.0
@@ -127,6 +121,7 @@ def main():
                 sim_setup  = h.get_simulation_setup(p,c)
                 h.write_setup(sim_setup,param_path)
                 sim_wrapper(p,c,param_path)
+    '''
 
     Gcc = 0.25
     for s in scale:

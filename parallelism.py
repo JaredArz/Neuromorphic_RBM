@@ -22,7 +22,7 @@ def run_in_batch(func,p,c,Edges,devs):
         processes = []
         #   create processes and start them
         for _ in range(batch_size):
-            sim = mp.Process(target=func, args=(p,c,Edges,devs,sol_queue,all_sols_queue,all_e_queue))
+            sim = mp.Process(target=func, args=(p,c,Edges,devs,sol_queue,all_sols_queue,all_e_queue,1))
             processes.append(sim)
             sim.start()
         #   waits for solution to be available
