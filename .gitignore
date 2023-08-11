@@ -1,25 +1,16 @@
-# Compiled Object files
-*.slo
-*.lo
+# Compiled Object and Library files
 *.o
-*.obj
-
-
-# Compiled Dynamic libraries
 *.so
-*.dylib
-*.dll
 
 # Fortran module files
 *.mod
-*.smod
 
 # Executables
-*.exe
 *.out
 
 # outputs
 **/outputs
+**/slurm_out
 
 #cache
 **/__pycache__
