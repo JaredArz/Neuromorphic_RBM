@@ -1,8 +1,8 @@
 import numpy as np
 import sys
 output_path = "../outputs"
-session_dir = "RBM_sims_08-07"
-data_dir = "MaxSat_1000_Memristor_08-07_15:12:58"
+session_dir = "RBM_sims_08-10"
+data_dir = "MaxSat_1000_Memristor_19:02:54"
 param_dir = "params_Gdd0.2_Gcc0.05_NddTrue_Js150_i3"
 dev_dir = "Dev_4"
 sys.path.append('{output_path}/{session_dir}/{data_dir}/{param_dir}/{dev_dir}/')
