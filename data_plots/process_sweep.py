@@ -3,16 +3,10 @@ import re
 import os
 import glob
 import time
+from data_class import data
 
-class data:
-    def __init__(self,m,s,h,l):
-        self.means   = m
-        self.stddevs = s
-        self.highs   = h
-        self.lows    = l
 
 to_float = lambda val: float( val )
-get_slice_attrs = lambda sliced, attr: [getattr(elem, attr) for elem in sliced]
 
 def main():
     # y is implicitly success rate
@@ -39,7 +33,7 @@ def main():
 
     print("save data file as (.npy):")
     fname = input()
-    np.save(fname, all_data)
+    np.save(f"./data/{fname}", all_data)
 
 
 def get_file_data(dir_path, data_file):
