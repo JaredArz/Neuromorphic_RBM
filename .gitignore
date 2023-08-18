@@ -8,8 +8,10 @@
 # Executables
 *.out
 
+
 # outputs
 **/outputs
+**/plots
 **/slurm_out
 
 #cache

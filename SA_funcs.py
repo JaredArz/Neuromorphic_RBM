@@ -9,11 +9,11 @@ import time
 import itertools as it
 import helper_funcs as h
 
-Max_Sat_Weights = np.array([[-5, -1, -1, 10, -1, -1], 
+Max_Sat_Weights = np.array([[-5, -1, -1, 10, -1, -1],
                           [-1, -7, -2, -2, 10, -1],
-                          [-1, -2, -7, -2, -1, 10], 
+                          [-1, -2, -7, -2, -1, 10],
                           [10, -2, -2, -7, -1, -1],
-                          [-1, 10, -1, -1, -5, -1], 
+                          [-1, 10, -1, -1, -5, -1],
                           [-1, -1, 10, -1, -1, -5]])
 #Example Graph:
 #  0  1
@@ -22,12 +22,29 @@ Max_Sat_Weights = np.array([[-5, -1, -1, 10, -1, -1],
 #  |/\|
 #  4  5
 #Solution is 110011/001100 = 51/12
-Max_Cut_Weights = np.array([[10,10,-1,-1,10,10], 
-                          [10,10,-1,-1,10,10], 
-                          [-1,-1,10,10,-1,-1], 
-                          [-1,-1,10,10,-1,-1], 
-                          [10,10,-1,-1,10,10], 
+Max_Cut_Weights = np.array([[10,10,-1,-1,10,10],
+                          [10,10,-1,-1,10,10],
+                          [-1,-1,10,10,-1,-1],
+                          [-1,-1,10,10,-1,-1],
+                          [10,10,-1,-1,10,10],
                           [10,10,-1,-1,10,10]])
+
+#Example Graph:
+#            0
+#           / \
+#          1   2 
+#         /\   /\
+#        /  \ /  \  
+#        \   4   /
+#         \ / \ /
+#          3   5
+#Solution is 100101 = 37
+Ind_Set_Weights = np.array([[-10,10,10,-1,-1,-1],
+                          [10,-10,-1,10,10,-1],
+                          [10,-1,-10,-1,10,10],
+                          [-1,10,-1,-10,10,-1],
+                          [-1,10,10,10,-10,10],
+                          [-1,-1,10,-1,10,-10]])
 
 def SetMTJs(mag_dev_sig):
     thetas    = np.full(6,np.pi/2)
@@ -41,6 +58,8 @@ def SetCBA(g_dev_sig,prob,cb_array):
         Edges = Max_Sat_Weights
     elif prob == "Max Cut":
         Edges = Max_Cut_Weights
+    elif prob == "Ind Set":
+        Edges = Ind_Set_Weights
     else:
         print("bad problem")
         exit()
@@ -54,8 +73,11 @@ def SetCBA(g_dev_sig,prob,cb_array):
 
 limit_current = lambda J: -6e9 if(J < -6e9) else( 6e9 if(J > 6e9) else J)
 def SA(p,c, Edges,devs, sol_queue,sol_hist_queue,e_hist_queue,parallel_flag):
-    _,g_cyc_sig,_,iter_per_temp,Jsot_steps,scale = h.unpack_params(p)
-    cb_array = c["cb_array"]
+    g_cyc_sig  = p["g_cyc_sig"]
+    scale      = p["scale"]
+    cb_array   = c["cb_array"]
+    Jsot_steps = c["Jsot_steps"]
+    iter_per_temp = c["iter_per_temp"]
 
     Edges_base = copy.deepcopy(Edges)
 
@@ -68,7 +90,7 @@ def SA(p,c, Edges,devs, sol_queue,sol_hist_queue,e_hist_queue,parallel_flag):
     Jsot_max    = 5e11      #
     Jsot_min    = 1e11      #
     # =======================
-    Jsot_delta = ( Jsot_max - Jsot_min ) / Jsot_steps 
+    Jsot_delta = ( Jsot_max - Jsot_min ) / Jsot_steps
     # limit current according to [1]
     # ========================================================
 
@@ -84,29 +106,26 @@ def SA(p,c, Edges,devs, sol_queue,sol_hist_queue,e_hist_queue,parallel_flag):
     #   Random state to start
     # =================================================
     Vertices = sample_neurons(devs,0,0,0)
-    weighted = np.dot(Vertices, Edges) 
+    weighted = np.dot(Vertices, Edges)
 
     energy_history = []
     solution_history = []
 
     Teff = Jsot_max #Set effective temperature
-    while(Teff >= Jsot_min): 
+    while(Teff >= Jsot_min):
         for g in range(iter_per_temp):
             weighted_scaled_limited = lmap(limit_current,weighted * scale)
-            input_J = weighted_scaled_limited
-            Vertices = (sample_neurons(devs,input_J,Teff,0))
+            Vertices = (sample_neurons(devs,weighted_scaled_limited,Teff,0))
 
             #============================
             #   weighted arr is the result of VMM --
             #   once scaled, it's used as input for the array of MTJs
             #============================
             weighted = np.dot(Vertices, Edges)
-            if g == iter_per_temp-1:
-                pass
-            else:
+            if g != iter_per_temp-1:
                 Edges = inject_add_cyc_noise(Edges_base,cb_array,g_cyc_sig)
         energy_history.append(Vertices @ Edges @ np.array(Vertices).T)
-        solution_history.append(convertToDec(Vertices)) 
+        solution_history.append(convertToDec(Vertices))
         Edges = inject_add_cyc_noise(Edges_base,cb_array,g_cyc_sig)
         Teff -= Jsot_delta
     solution = convertToDec(Vertices)
@@ -134,7 +153,7 @@ def sample_neurons(devs,neurons_dot_W_scaled,J_step,dump_flag) -> list:
     #   initial setting will be initialized here
     if type(neurons_dot_W_scaled) is int:
         neurons_dot_W_scaled = np.zeros(6)
-    for h in range(6): 
+    for h in range(6):
         #   NOTE: python-fortran interface
         #   f90 call looks like import.module_name.function(args)
         _, out, theta_end, phi_end = f90.single_sample.pulse_then_relax(neurons_dot_W_scaled[h],J_step,\
@@ -152,12 +171,10 @@ abs_arr         = lambda e: abs(e)
 lmap = lambda func, *iterable: list(map(func, *iterable))
 # The resistance is experimentally observed to be approximately log-normal (both cycle-to-cycle and device-to-device)
 # From Intrinsic Switching Variability in HfO2 RRAM, A.Fantini
-def inject_add_cyc_noise(G_in,cbarr,std_dev=None) -> np.ndarray:
+def inject_add_cyc_noise(G_in,cbarr,std_dev) -> np.ndarray:
     if std_dev == 0:
         return G_in
     #//////////////////
-    if std_dev is None:
-        stdd = cbarr.base_cyc_stdd
     else:
         stdd = std_dev
     #//////////////////
@@ -170,17 +187,15 @@ def inject_add_cyc_noise(G_in,cbarr,std_dev=None) -> np.ndarray:
         G_out         = np.multiply(abs_G_out, sign_matrix)
         return G_out
     elif cbarr.device_type == "MTJ":
-        diff = (1.0/cbarr.LRS) - (1.0/cbarr.HRS) 
+        diff = (1.0/cbarr.LRS) - (1.0/cbarr.HRS)
         scaled_stdd = diff*stdd
         noise = np.random.normal(0,scaled_stdd,6)
         return G_in + noise
 
-def inject_add_dev_var(G_in,cbarr,std_dev=None) -> np.ndarray:
+def inject_add_dev_var(G_in,cbarr,std_dev) -> np.ndarray:
     if std_dev == 0:
         return G_in
     #//////////////////
-    if std_dev == None:
-        stdd = cbarr.base_dev_stdd
     else:
         stdd = std_dev
     #//////////////////
@@ -193,7 +208,7 @@ def inject_add_dev_var(G_in,cbarr,std_dev=None) -> np.ndarray:
         G_out         = np.multiply(abs_G_out, sign_matrix)
         return G_out
     elif cbarr.device_type == "MTJ":
-        diff = (1.0/cbarr.LRS) - (1.0/cbarr.HRS) 
+        diff = (1.0/cbarr.LRS) - (1.0/cbarr.HRS)
         scaled_stdd = diff*stdd
         noise = np.random.normal(0,scaled_stdd,6)
         return G_in + noise
