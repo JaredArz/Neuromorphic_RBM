@@ -33,8 +33,7 @@ def main():
                     # using file globbing in the data directory, need each pertinent value
                     #FIXME: i had intended to get slices back by globbing, but now im doing this individually.... maybe easier hthis way???
                     glob = {"gdd":gdd[k], "gcc":gcc[l], "mdd":mdd[i], "s":scale[j]}
-
-                    dir_path = select_dir(root_dir,const_params)
+                    dir_path = select_dir(root_dir,glob)
                     means,stddevs,highs,lows = map(to_float, get_file_data(dir_path,data_file))
                     all_data[i,j,k,l] = data(means,stddevs,highs,lows)
 
@@ -45,24 +44,28 @@ def main():
 
 def get_file_data(dir_path, data_file):
     #dir_path = sorted(select_dir(root_dir,const_params))
-    with open(os.path.join(dir_path,data_file), 'r') as f:
-        for line in f:
-            match   = re.search(r"Mean: (\d+\.\d+)", line)
-            if match:
-                mean = match.group(1)
-                continue
-            match = re.search(r"Std. dev: (\d+\.\d+)", line)
-            if match:
-                stddev = match.group(1)
-                continue
-            match   = re.search(r"High: (\d+\.\d+)", line)
-            if match:
-                high = match.group(1)
-                continue
-            match    = re.search(r"Low: (\d+\.\d+)" , line)
-            if match:
-                low = match.group(1)
-                break
+    try:
+        with open(os.path.join(dir_path,data_file), 'r') as f:
+            for line in f:
+                match   = re.search(r"Mean: (\d+\.\d+)", line)
+                if match:
+                    mean = match.group(1)
+                    continue
+                match = re.search(r"Std. dev: (\d+\.\d+)", line)
+                if match:
+                    stddev = match.group(1)
+                    continue
+                match   = re.search(r"High: (\d+\.\d+)", line)
+                if match:
+                    high = match.group(1)
+                    continue
+                match    = re.search(r"Low: (\d+\.\d+)" , line)
+                if match:
+                    low = match.group(1)
+                    break
+    except(FileNotFoundError):
+        print(f"Directory:\n{dir_path} \ {data_file} \nNot found -- The sweep is incomplete. returning 0's")
+        return 0.0,0.0,0.0,0.0
     return mean,stddev,high,low
 
 def select_dir(root_dir,c):
