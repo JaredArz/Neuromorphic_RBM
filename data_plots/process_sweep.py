@@ -23,7 +23,7 @@ def main():
     for i in range(len(mdd)):
         for j in range(len(scale)):
             for k in range(len(gdd)):
-                for l in range(len(gdd)):
+                for l in range(len(gcc)):
                     # using file globbing in the data directory, need each pertinent value
                     #FIXME: i had intended to get slices back by globbing, but now im doing this individually.... maybe easier hthis way???
                     glob = {"gdd":gdd[k], "gcc":gcc[l], "mdd":mdd[i], "s":scale[j]}
