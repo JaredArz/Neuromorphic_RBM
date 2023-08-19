@@ -63,8 +63,9 @@ def get_file_data(dir_path, data_file):
     return mean,stddev,high,low
 
 def select_dir(root_dir,c):
+    path_to_glob = f'{root_dir}/*Gdd{c["gdd"]}_Gcc{c["gcc"]}_Ndd{c["mdd"]}_s{c["s"]:.2e}*'
     if c is not None:
-        dir_path = glob.glob(f'{root_dir}/*Gdd{c["gdd"]}_Gcc{c["gcc"]}_Ndd{c["mdd"]}_s{c["s"]:.2e}*')
+        dir_path = glob.glob(path_to_glob)
     else:
         dir_path = glob.glob(f'{root_dir}/*')
     for d in dir_path:
@@ -73,7 +74,7 @@ def select_dir(root_dir,c):
             dir_path.pop(i)
 
     if len(dir_path) == 0:
-        print(f"Directory:\n{dir_path}\nNot found -- The sweep is incomplete. Pointing program to null data.")
+        print(f"Directory:\n{path_to_glob}\nNot found -- The sweep is incomplete. Pointing program to null data.")
         return "../outputs/null_data"
     return dir_path[0]
 

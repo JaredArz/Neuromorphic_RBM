@@ -12,6 +12,7 @@
 # outputs
 **/outputs
 **/plots
+**/data_plots/plots
 **/slurm_out
 
 #cache
