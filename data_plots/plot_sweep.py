@@ -19,8 +19,8 @@ def main():
     D = np.load(data_fname,allow_pickle=True)
     #=========== mdd,s,gdd,gcc
     plot_sweep_slice(x,D[0,0,:,0],colors[0])
-    plot_sweep_slice(x,D[1,0,:,0],colors[1])
-    plot_sweep_slice(x,D[2,0,:,0],colors[2])
+    plot_sweep_slice(x,D[0,1,:,0],colors[1])
+    plot_sweep_slice(x,D[0,2,:,0],colors[2])
     print("save plot as (.svg):")
     fname = input()
     plt.savefig(f"./plots/{fname}.svg", format = 'svg')

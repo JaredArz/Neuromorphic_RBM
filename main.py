@@ -15,13 +15,13 @@ import os
 #-Controlled Magnetic Anisotropy and Spin Orbit Torque Magnetic Tunnel Junctions 
 
 # Global ==================
-total_iters = 1000
-num_devs    = 1
+total_iters = 500
+num_devs    = 25
 CBA_is_dev    = True
 MTJs_is_dev   = True
 parallel_flag = True
 batch_size = 16
-prob = "Max Sat"
+prob = "Max Cut"
 cb_array  = RRAM_types.HfHfO2
 iter_per_temp = 3  # 3 works well
 Jsot_steps    = 150  # 150 works well -- jared
@@ -29,10 +29,16 @@ Jsot_steps    = 150  # 150 works well -- jared
 
 def main():
     # sweeping parameters
-    g_dev_sig   = [0.0,0.05,0.1,0.15,0.2,0.25,0.3,0.4,0.5]
-    g_cyc_sig   = [0.0,0.05,0.1,0.15,0.2,0.25,0.3,0.4,0.5]
-    mag_dev_sig = [0.0,0.05,0.1]
-    scale = [1e14]
+    #g_dev_sig   = [0.0,0.05,0.1,0.15,0.2,0.25,0.3,0.4,0.5]
+    #g_cyc_sig   = [0.0,0.05,0.1,0.15,0.2,0.25,0.3,0.4,0.5]
+    #mag_dev_sig = [0.0,0.05,0.1]
+    #scale = [1e14]
+    #g_dev_sig   = [0.0,0.2]
+    #g_cyc_sig   = [0.0,0.2]
+    g_dev_sig   = [0.2]
+    g_cyc_sig   = [0.2]
+    mag_dev_sig = [0.05]
+    scale = [1.00E+15,1.25E+15,1.75E+15,1.00E+16]
 
     #  constants, named list 
     c = {"total_iters":total_iters, "num_devs": num_devs,
@@ -45,18 +51,18 @@ def main():
     # ========================== sweep ==================================
     total_start_time = time.time()
 
-    Gdd = 0.0
-    Gcc = 0.0
-    Mdd = 0.0
-    for s in scale:
-        r_str = (str(Gdd)+str(Gcc)+str(Mdd)+str(s))
-        if(repeat_run(r_str)): continue
-        else:run_strings.add(r_str)
-        p = {"g_dev_sig": Gdd, "g_cyc_sig":Gcc,"mag_dev_sig":Mdd,"scale":s}
-        param_path = h.get_param_path(out_path,p)
-        sim_setup  = h.get_simulation_setup(p,c)
-        h.write_setup(sim_setup,param_path)
-        sim_wrapper(p,c,param_path)
+    for Gdd in g_dev_sig:
+        for Gcc in g_cyc_sig:
+            for Mdd in mag_dev_sig:
+                for s in scale:
+                    r_str = (str(Gdd)+str(Gcc)+str(Mdd)+str(s))
+                    if(repeat_run(r_str)): continue
+                    else:run_strings.add(r_str)
+                    p = {"g_dev_sig": Gdd, "g_cyc_sig":Gcc,"mag_dev_sig":Mdd,"scale":s}
+                    param_path = h.get_param_path(out_path,p)
+                    sim_setup  = h.get_simulation_setup(p,c)
+                    h.write_setup(sim_setup,param_path)
+                    sim_wrapper(p,c,param_path)
     # ===============================================================================
 
     print("--- total program time: %s seconds ---" % (time.time() - total_start_time))
