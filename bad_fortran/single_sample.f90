@@ -41,7 +41,6 @@ module single_sample
         !solve init 
         t_iter  = 1 ! fortran has array indexing of 1, in math terms, t=0
         power_i = 0.0_dp
-        power_i = 0.0
         theta_i = real(theta_init,dp)
         phi_i   = real(phi_init,dp)
         if(dump_flag) then
@@ -55,6 +54,7 @@ module single_sample
         J_SHE = real(Jshe_in,dp)
         J_STT = real(Jappl,dp)
         Hk    = (2.0*real(dev_Ki,dp))/(tf*Ms*u0)-(2.0*ksi*V)/(u0*tox*tf)
+        print *, J_SHE 
         do i = 1, pulse_steps
             !keep track of time steps for array navigation
             t_iter=i+1
@@ -76,17 +76,13 @@ module single_sample
             cumulative_pow(t_iter) = real(power_i)
             if(dump_flag) then
                 theta_over_time(t_iter) = real(theta_i)
-                phi_over_time(t_iter) = real(phi_i)
-                phi_over_time(t_iter) =  real(phi_i)
+                phi_over_time(t_iter)   = real(phi_i)
             end if
 
         end do
 
         !=================  Relax into a one of two low-energy states out-of-plane  ===================
         V=0
-        J_SHE = 0
-        J_STT = real(Jappl,dp)
-        Hk = (2.0*real(dev_Ki,dp))/(tf*Ms*u0)-(2*ksi*V)/(u0*Ms*tox*tf)
         J_SHE = 0.0
         J_STT = real(Jappl,dp)
         Hk = (2.0*real(dev_Ki,dp))/(tf*Ms*u0)-(2.0*ksi*V)/(u0*Ms*tox*tf)
@@ -120,11 +116,8 @@ module single_sample
                     form = 'formatted')
             open(unit = 20, file = "time_evol_theta.txt", action = "write", status = "replace", &
                     form = 'formatted')
-            write(15,*)phi_over_time
-            write(20,*)theta_over_time
             write(15,*) phi_over_time
             write(20,*) theta_over_time
-
             close(15)
             close(20)
         end if
@@ -133,7 +126,6 @@ module single_sample
 
         ! ===== return final solve values: energy,bit,theta,phi ====
         theta_end = real(theta_i)
-        phi_end = real(phi_i)
         phi_end   = real(phi_i)
         if( cos(theta_end) > 0.0 ) then
             bit = 1

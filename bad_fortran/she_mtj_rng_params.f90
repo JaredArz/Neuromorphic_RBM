@@ -20,7 +20,7 @@ module SHE_MTJ_rng_params
     real(dp),parameter :: gammab  = gammall/u0
     real(dp),parameter :: t_step = 5e-11
     real(dp) :: v_pulse = 0.0
-    real(dp) :: Jshe = 5e11
+    !real(dp) :: Jshe = 5e11
     real(dp),parameter :: t_pulse = 10e-9
     real(dp),parameter :: t_relax = 15e-9
     real(dp),parameter :: a  = 50e-9
