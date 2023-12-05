@@ -1,7 +1,6 @@
 import matplotlib.pyplot as plt
 from pathlib import Path
 import numpy as np
-
 import RRAM_types
 import helper_funcs as h
 from SA_funcs  import SA,SetMTJs,SetCBA
@@ -31,7 +30,7 @@ def main():
     g_dev_sig   = [0.25]
     g_cyc_sig   = [0.25]
     mag_dev_sig = [0.1]
-    scale = [1.25e14]
+    scale = [5e13]
 
     #  constants, named list 
     c = {"total_iters":total_iters, "num_devs": num_devs,

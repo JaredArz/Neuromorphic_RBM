@@ -17,5 +17,5 @@ pwd
 date
 
 # Launch code
-srun python scurve.py
+srun python scurve.py -g
 
