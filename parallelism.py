@@ -11,9 +11,9 @@ def run_in_batch(func,p,c,Edges,devs):
     #   core is available, it wont run till the slowest
     #   process finishes. good enough for now though.
     sims_to_run = c["total_iters"]
-    batch_size = c["batch_size"]
+    batch_size  = c["batch_size"]
     #pbar = tqdm(total=sims_to_run,ncols=80)
-    while sims_to_run >= 1:        
+    while sims_to_run  >= 1:
         if sims_to_run < batch_size:
             batch_size = sims_to_run
         sol_queue      = mp.Queue()  # parallel-safe queue
@@ -37,7 +37,7 @@ def run_in_batch(func,p,c,Edges,devs):
         for sim in processes:
             sim.join()
         #pbar.update(batch_size)
-        sims_to_run -= batch_size 
+        sims_to_run -= batch_size
         for sim in processes:
             sim.close()
         del sol_queue

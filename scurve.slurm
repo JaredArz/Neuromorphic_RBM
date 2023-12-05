@@ -1,8 +1,8 @@
 #!/bin/bash
 
-#SBATCH -J sa           # Job name
-#SBATCH -o ./slurm_out/sa.o%j       # Name of stdout output file
-#SBATCH -e ./slurm_out/sa.e%j       # Name of stderr error file
+#SBATCH -J scurve           # Job name
+#SBATCH -o ./slurm_out/scurve.o%j       # Name of stdout output file
+#SBATCH -e ./slurm_out/scruve.e%j       # Name of stderr error file
 #SBATCH -p normal            # Queue (partition) name
 #SBATCH -N 1                 # Total # of nodes (must be 1 for serial)
 #SBATCH -n 1               # Total # of mpi tasks (should be 1 for serial)
@@ -17,5 +17,5 @@ pwd
 date
 
 # Launch code
-srun -c 128 python main_single.py
+srun python scurve.py
 

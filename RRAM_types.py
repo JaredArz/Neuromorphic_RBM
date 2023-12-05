@@ -27,9 +27,9 @@ HfHfO2  = RRAM_dev(1e5,1e6,
 #   known-good values [end points of highest solution band]:
 #   harder problems may be more susceptible to differences in this scale value
 #               RRAM                        MRAM
-#   Max Sat    [0.75e14 1.25e14]      [1.25e12]
-#   Max Cut    [1e15]      [1.5e13 1e14]
-#   Ind Set    [1e14]      [1e12 ** bad results max 70]
+#   Max Sat    [1.25e14]   [1.25e12]
+#   Max Cut    [1e15]      [1.5e13]
+#   Ind Set    [1e14]      [1.25e12]
 #=============================================================
 
 

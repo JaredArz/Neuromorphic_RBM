@@ -5,7 +5,7 @@ def draw_norm(x,psig):
 
 def draw_const(x,csig):
     return x + np.random.normal(-1*csig,csig,1)
-    
+
 class SHE_MTJ_rng():
     def __init__(self,init_theta,phi_init,sig):
         if init_theta == 0:

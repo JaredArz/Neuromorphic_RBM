@@ -15,7 +15,7 @@ import os
 
 # Global ==================
 total_iters = 1000
-num_devs    = 100
+num_devs    = 50
 CBA_is_dev    = True
 MTJs_is_dev   = True
 parallel_flag = True
@@ -28,9 +28,9 @@ Jsot_steps    = 150  # 150 works well -- jared
 
 def main():
     # sweeping parameters
-    g_dev_sig   = [0.0,0.05,0.1,0.15,0.2,0.25,0.3,0.4,0.5]
-    g_cyc_sig   = [0.0,0.05,0.1,0.15,0.2,0.25,0.3,0.4,0.5]
-    mag_dev_sig = [0.0,0.05,0.1]
+    g_dev_sig   = [0.25]
+    g_cyc_sig   = [0.25]
+    mag_dev_sig = [0.1]
     scale = [1.25e14]
 
     #  constants, named list 
@@ -44,83 +44,18 @@ def main():
     # ========================== sweep ==================================
     total_start_time = time.time()
 
-
-    Gdd = 0.0
-    Gcc = 0.0
     for Mdd in mag_dev_sig:
-        for s in scale:
-            r_str = (str(Gdd)+str(Gcc)+str(Mdd)+str(s))
-            if(repeat_run(r_str)): continue
-            else:run_strings.add(r_str)
-            p = {"g_dev_sig": Gdd, "g_cyc_sig":Gcc,"mag_dev_sig":Mdd,"scale":s}
-            param_path = h.get_param_path(out_path,p)
-            sim_setup  = h.get_simulation_setup(p,c)
-            h.write_setup(sim_setup,param_path)
-            sim_wrapper(p,c,param_path)
-
-    Gdd = 0.0
-    Mdd = 0.0
-    for Gcc in g_cyc_sig:
-        for s in scale:
-            r_str = (str(Gdd)+str(Gcc)+str(Mdd)+str(s))
-            if(repeat_run(r_str)): continue
-            else:run_strings.add(r_str)
-            p = {"g_dev_sig": Gdd, "g_cyc_sig":Gcc,"mag_dev_sig":Mdd,"scale":s}
-            param_path = h.get_param_path(out_path,p)
-            sim_setup  = h.get_simulation_setup(p,c)
-            h.write_setup(sim_setup,param_path)
-            sim_wrapper(p,c,param_path)
-
-    Gcc = 0.0
-    Mdd = 0.0
-    for Gdd in g_dev_sig:
-        for s in scale:
-            r_str = (str(Gdd)+str(Gcc)+str(Mdd)+str(s))
-            if(repeat_run(r_str)): continue
-            else:run_strings.add(r_str)
-            p = {"g_dev_sig": Gdd, "g_cyc_sig":Gcc,"mag_dev_sig":Mdd,"scale":s}
-            param_path = h.get_param_path(out_path,p)
-            sim_setup  = h.get_simulation_setup(p,c)
-            h.write_setup(sim_setup,param_path)
-            sim_wrapper(p,c,param_path)
-    Gcc = 0.2
-    Mdd = 0.05
-    for Gdd in g_dev_sig:
-        for s in scale:
-            r_str = (str(Gdd)+str(Gcc)+str(Mdd)+str(s))
-            if(repeat_run(r_str)): continue
-            else:run_strings.add(r_str)
-            p = {"g_dev_sig": Gdd, "g_cyc_sig":Gcc,"mag_dev_sig":Mdd,"scale":s}
-            param_path = h.get_param_path(out_path,p)
-            sim_setup  = h.get_simulation_setup(p,c)
-            h.write_setup(sim_setup,param_path)
-            sim_wrapper(p,c,param_path)
-    Gdd = 0.2
-    Mdd = 0.05
-    for Gcc in g_cyc_sig:
-        for s in scale:
-            r_str = (str(Gdd)+str(Gcc)+str(Mdd)+str(s))
-            if(repeat_run(r_str)): continue
-            else:run_strings.add(r_str)
-            p = {"g_dev_sig": Gdd, "g_cyc_sig":Gcc,"mag_dev_sig":Mdd,"scale":s}
-            param_path = h.get_param_path(out_path,p)
-            sim_setup  = h.get_simulation_setup(p,c)
-            h.write_setup(sim_setup,param_path)
-            sim_wrapper(p,c,param_path)
-
-    Gcc = 0.2
-    Gdd = 0.2
-    Mdd = 0.05
-    scale = [1e14,1.1e14,1.2e14,1.3e14,1.4e14,1.5e14]
-    for s in scale:
-        r_str = (str(Gdd)+str(Gcc)+str(Mdd)+str(s))
-        if(repeat_run(r_str)): continue
-        else:run_strings.add(r_str)
-        p = {"g_dev_sig": Gdd, "g_cyc_sig":Gcc,"mag_dev_sig":Mdd,"scale":s}
-        param_path = h.get_param_path(out_path,p)
-        sim_setup  = h.get_simulation_setup(p,c)
-        h.write_setup(sim_setup,param_path)
-        sim_wrapper(p,c,param_path)
+        for Gcc in g_cyc_sig:
+            for Gdd in g_dev_sig:
+                for s in scale:
+                    r_str = (str(Gdd)+str(Gcc)+str(Mdd)+str(s))
+                    if(repeat_run(r_str)): continue
+                    else:run_strings.add(r_str)
+                    p = {"g_dev_sig": Gdd, "g_cyc_sig":Gcc,"mag_dev_sig":Mdd,"scale":s}
+                    param_path = h.get_param_path(out_path,p)
+                    sim_setup  = h.get_simulation_setup(p,c)
+                    h.write_setup(sim_setup,param_path)
+                    sim_wrapper(p,c,param_path)
 
     # ===============================================================================
 
