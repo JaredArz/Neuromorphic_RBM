@@ -13,12 +13,12 @@ import os
 #-Controlled Magnetic Anisotropy and Spin Orbit Torque Magnetic Tunnel Junctions 
 
 # Global ==================
-total_iters = 1000
-num_devs    = 50
+total_iters = 100
+num_devs    = 5
 CBA_is_dev    = True
 MTJs_is_dev   = True
 parallel_flag = True
-batch_size = 128
+batch_size = 4
 prob = "Max Sat"
 cb_array  = RRAM_types.HfHfO2
 iter_per_temp = 3  # 3 works well
@@ -29,8 +29,8 @@ def main():
     # sweeping parameters
     g_dev_sig   = [0.25]
     g_cyc_sig   = [0.25]
-    mag_dev_sig = [0.1]
-    scale = [5e13]
+    mag_dev_sig = [0.05]
+    scale = [1e6,1e7,1e8,1e9,1e10,1e11,1e12,1e13,1e14,1e15]
 
     #  constants, named list 
     c = {"total_iters":total_iters, "num_devs": num_devs,

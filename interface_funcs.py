@@ -12,7 +12,7 @@ def mtj_sample(dev,Jstt,Jshe,dump_mod=1,view_mag_flag=0,file_ID=1,config_check=0
     # Need to update device objects and put together time evolution data after return.
     dev.phi = phi_end
     dev.theta = theta_end
-    #if( (view_mag_flag and (dev.sample_count % dump_mod == 0)) or config_check):
+    #if( (view_mag_flag and dump_mod == 0) or config_check):
     #    # These file names are determined by fortran subroutine single_sample.
     #    phi_from_txt   = np.loadtxt("phi_time_evol_"+ format_file_ID(file_ID) + ".txt", dtype=float, usecols=0, delimiter=None)
     #    theta_from_txt = np.loadtxt("theta_time_evol_"+ format_file_ID(file_ID) + ".txt", dtype=float, usecols=0, delimiter=None)

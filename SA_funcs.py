@@ -1,6 +1,5 @@
 import sys
-sys.path.append('./fortran_source')
-import single_sample as f90
+from interface_funcs import mtj_sample
 from   mtj_types import SHE_MTJ_rng
 import numpy as np
 import copy
@@ -154,13 +153,7 @@ def sample_neurons(devs,neurons_dot_W_scaled,J_step,dump_flag) -> list:
     if type(neurons_dot_W_scaled) is int:
         neurons_dot_W_scaled = np.zeros(6)
     for h in range(6):
-        #   NOTE: python-fortran interface
-        #   f90 call looks like import.module_name.function(args)
-        _, out, theta_end, phi_end = f90.single_sample.pulse_then_relax(neurons_dot_W_scaled[h],J_step,\
-                                                      devs[h].theta,devs[h].phi,                     \
-                                                      devs[h].Ki,devs[h].TMR,devs[h].Rp,dump_flag)
-        devs[h].theta = theta_end
-        devs[h].phi = phi_end
+        out, _ = mtj_sample(devs[h],neurons_dot_W_scaled[h],J_step)
         bits.append( out )
     return bits
 

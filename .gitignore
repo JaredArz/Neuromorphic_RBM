@@ -14,6 +14,7 @@
 **/plots
 **/data_plots/plots
 **/slurm_out
+**/results
 
 #cache
 **/__pycache__

@@ -1,4 +1,5 @@
 import sys
+import scienceplots
 from interface_funcs import mtj_sample
 import os
 import time
@@ -8,13 +9,14 @@ from datetime import datetime
 import matplotlib.pyplot as plt
 from mtj_types import SHE_MTJ_rng, draw_norm
 import re
+import matplotlib.style as style
 from tqdm import tqdm
 
-j_steps = 100 #FIXME increase to 100
+j_steps = 500
 J_lut = np.linspace(-6e9,6e9,j_steps)
-J_SHEs = [3e11, 5e11, 4.85e12] #stcohastic values
-num_to_avg = 10000 #FIXME increase to 10000
-dev_variations = 1
+J_SHEs = [3e11, 5e11, 4.85e12]
+num_to_avg = 10000
+dev_variations = 100
 
 def gen():
   start_time = time.time()
@@ -22,10 +24,9 @@ def gen():
 
   devices = []
   for _ in range(dev_variations):
-    dev = SHE_MTJ_rng(np.pi/2, 2*np.pi, 0)
+    dev = SHE_MTJ_rng(np.pi/2, np.random.uniform(0,2*np.pi), 0.05)
     devices.append(dev)
 
-  #FIXME check dev-dev var range and SHE values
   pbar = tqdm(total=len(devices)*len(J_SHEs))
   for J_SHE in J_SHEs:
     for dev_num,dev in enumerate(devices):
@@ -58,30 +59,44 @@ def get_out_path():
   return out_path
 
 def plot(path):
+  CB_color_cycle = ['#377eb8', '#ff7f00', '#4daf4a',
+                  '#f781bf', '#a65628', '#984ea3',
+                  '#999999', '#e41a1c', '#dede00']
+  fig, ax = plt.subplots()
+  plt.rc('text', usetex=True)
+  plt.style.use(['science','ieee'])
+  plt.tight_layout()
   slash_re = r'\/$'
   date_re = r'\d{2}:\d{2}:\d{2}'
+  lines=[]
+
   for i,J_SHE in enumerate(J_SHEs):
     if re.search(slash_re, path):
       files = glob.glob(f"{path}*{J_SHE:.0e}*.txt")
     else:
       files = glob.glob(f"{path}/*{J_SHE:.0e}*.txt")
-    colormap = plt.cm.get_cmap('viridis', len(files))
     weights_2d = []
-    print(files)
-    for i,f in enumerate(files):
+
+    for f in files:
       weights = np.loadtxt(f, usecols=0);
       weights_2d.append(weights)
-    plt.plot(J_lut,np.average(weights_2d,axis=0),color=colormap(i), alpha=0.7)
-    #weights_2d = np.array(weights_2d)
-    #stddevs = np.array(compute_stddevs(weights_2d))
-    #for i in range(len(weights_2d[0])):
-    #  minus = weights_2d[i,:] - stddevs[:]
-    #  plus = weights_2d[i,:] + stddevs[:]
-    #  plt.fill_between(J_lut, minus,plus,interpolate=True,alpha=0.1)
+    average = np.average(weights_2d,axis=0)
+    line, = plt.plot(J_lut,average,color=CB_color_cycle[i], alpha=1, linewidth=2, linestyle='-')
+    lines.append(line)
+    stddevs = np.array(compute_stddevs(weights_2d))
+    minus = average[:] - stddevs[:]
+    plus = average[:] + stddevs[:]
+    # takes average of all devices and plots that scurve
+    # uses the standard deviation calculated from all the devices 
+    # to plot error bands
+    # note that each device weight curve is itself averaged over a few times to get
+    # a solid line
+    plt.fill_between(J_lut,minus,plus,interpolate=True,alpha=0.2)
 
-  plt.xlabel('J [A/m^2]')
-  plt.ylabel('weight')
-  plt.title('Coin Bias')
+  plt.xlabel(r'$J_{STT}$ ($A/m^{2}$)')
+  plt.ylabel('Weight')
+  plt.ylim([-0.05, 1.05])
+  plt.legend([lines[0],lines[1],lines[2]], [r'$3*10^{11}$', r'$5*10^{11}$', r'$5*10^{12}$'], title=r'$J_{SOT}(A/m^2)$',loc='upper right',prop={'size':16})
   print("save figure? (y/n)")
   user_bool = input()
   if user_bool == 'y' or user_bool == 'Y':
