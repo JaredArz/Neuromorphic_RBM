@@ -17,5 +17,5 @@ pwd
 date
 
 # Launch code
-srun -c 128 python main.py
+srun -c 127 python main.py
 
