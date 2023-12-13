@@ -14,24 +14,26 @@ import os
 #-Controlled Magnetic Anisotropy and Spin Orbit Torque Magnetic Tunnel Junctions 
 
 # Global ==================
-total_iters = 1000
-num_devs    = 10
-CBA_is_dev    = False
-MTJs_is_dev   = False
+total_iters = 5000
+num_devs    = 100
+CBA_is_dev    = True
+MTJs_is_dev   = True
 parallel_flag = True
-batch_size = 32
+batch_size = 127
 prob = "Max Sat"
 cb_array  = RRAM_types.HfHfO2
+scale = 1e12
 iter_per_temp = 3  # 3 works well
 Jsot_steps    = 150  # 150 works well -- jared
 # ====================
 
+repeat_run = lambda r: False if(r not in run_strings) else( True )
+
 def main():
     # sweeping parameters
-    g_dev_sig   = [0.0,0.05,0.1,0.15,0.2,0.25,0.3,0.4,0.5]
-    g_cyc_sig   = [0.0,0.05,0.1,0.15,0.2,0.25,0.3,0.4,0.5]
-    mag_dev_sig = [0.0,0.05,0.1]
-    scale = [1.25e14]
+    g_dev_sig   = [0.0,0.025,0.05,0.1,0.15,0.2,0.25]
+    g_cyc_sig   = [0.0,0.025,0.05,0.1,0.15,0.2,0.25]
+    mag_dev_sig = [0.0,0.025,0.05,0.1,0.15,0.2,0.25]
 
     #  constants, named list 
     c = {"total_iters":total_iters, "num_devs": num_devs,
@@ -39,7 +41,6 @@ def main():
          "Jsot_steps":Jsot_steps,"prob":prob,"batch_size": batch_size}
     out_path = h.get_out_path(c)
     run_strings = set()
-    repeat_run = lambda r: False if(r not in run_strings) else( True )
 
     # ========================== sweep ==================================
     total_start_time = time.time()
@@ -48,11 +49,10 @@ def main():
     Gdd = 0.0
     Gcc = 0.0
     for Mdd in mag_dev_sig:
-        for s in scale:
-            r_str = (str(Gdd)+str(Gcc)+str(Mdd)+str(s))
+            r_str = (str(Gdd)+str(Gcc)+str(Mdd))
             if(repeat_run(r_str)): continue
             else:run_strings.add(r_str)
-            p = {"g_dev_sig": Gdd, "g_cyc_sig":Gcc,"mag_dev_sig":Mdd,"scale":s}
+            p = {"g_dev_sig": Gdd, "g_cyc_sig":Gcc,"mag_dev_sig":Mdd,"scale":scale}
             param_path = h.get_param_path(out_path,p)
             sim_setup  = h.get_simulation_setup(p,c)
             h.write_setup(sim_setup,param_path)
@@ -61,11 +61,10 @@ def main():
     Gdd = 0.0
     Mdd = 0.0
     for Gcc in g_cyc_sig:
-        for s in scale:
-            r_str = (str(Gdd)+str(Gcc)+str(Mdd)+str(s))
+            r_str = (str(Gdd)+str(Gcc)+str(Mdd))
             if(repeat_run(r_str)): continue
             else:run_strings.add(r_str)
-            p = {"g_dev_sig": Gdd, "g_cyc_sig":Gcc,"mag_dev_sig":Mdd,"scale":s}
+            p = {"g_dev_sig": Gdd, "g_cyc_sig":Gcc,"mag_dev_sig":Mdd,"scale":scale}
             param_path = h.get_param_path(out_path,p)
             sim_setup  = h.get_simulation_setup(p,c)
             h.write_setup(sim_setup,param_path)
@@ -74,53 +73,14 @@ def main():
     Gcc = 0.0
     Mdd = 0.0
     for Gdd in g_dev_sig:
-        for s in scale:
-            r_str = (str(Gdd)+str(Gcc)+str(Mdd)+str(s))
+            r_str = (str(Gdd)+str(Gcc)+str(Mdd))
             if(repeat_run(r_str)): continue
             else:run_strings.add(r_str)
-            p = {"g_dev_sig": Gdd, "g_cyc_sig":Gcc,"mag_dev_sig":Mdd,"scale":s}
+            p = {"g_dev_sig": Gdd, "g_cyc_sig":Gcc,"mag_dev_sig":Mdd,"scale":scale}
             param_path = h.get_param_path(out_path,p)
             sim_setup  = h.get_simulation_setup(p,c)
             h.write_setup(sim_setup,param_path)
             sim_wrapper(p,c,param_path)
-    Gcc = 0.2
-    Mdd = 0.05
-    for Gdd in g_dev_sig:
-        for s in scale:
-            r_str = (str(Gdd)+str(Gcc)+str(Mdd)+str(s))
-            if(repeat_run(r_str)): continue
-            else:run_strings.add(r_str)
-            p = {"g_dev_sig": Gdd, "g_cyc_sig":Gcc,"mag_dev_sig":Mdd,"scale":s}
-            param_path = h.get_param_path(out_path,p)
-            sim_setup  = h.get_simulation_setup(p,c)
-            h.write_setup(sim_setup,param_path)
-            sim_wrapper(p,c,param_path)
-    Gdd = 0.2
-    Mdd = 0.05
-    for Gcc in g_cyc_sig:
-        for s in scale:
-            r_str = (str(Gdd)+str(Gcc)+str(Mdd)+str(s))
-            if(repeat_run(r_str)): continue
-            else:run_strings.add(r_str)
-            p = {"g_dev_sig": Gdd, "g_cyc_sig":Gcc,"mag_dev_sig":Mdd,"scale":s}
-            param_path = h.get_param_path(out_path,p)
-            sim_setup  = h.get_simulation_setup(p,c)
-            h.write_setup(sim_setup,param_path)
-            sim_wrapper(p,c,param_path)
-
-    Gcc = 0.2
-    Gdd = 0.2
-    Mdd = 0.05
-    scale = [1e14,1.1e14,1.2e14,1.3e14,1.4e14,1.5e14]
-    for s in scale:
-        r_str = (str(Gdd)+str(Gcc)+str(Mdd)+str(s))
-        if(repeat_run(r_str)): continue
-        else:run_strings.add(r_str)
-        p = {"g_dev_sig": Gdd, "g_cyc_sig":Gcc,"mag_dev_sig":Mdd,"scale":s}
-        param_path = h.get_param_path(out_path,p)
-        sim_setup  = h.get_simulation_setup(p,c)
-        h.write_setup(sim_setup,param_path)
-        sim_wrapper(p,c,param_path)
 
     # ===============================================================================
 
@@ -154,7 +114,7 @@ def sim_wrapper(p,c,parent_path):
     #==================================
 
     f = open( Path( parent_path / "device_iterations.txt" ), 'w' )
-    w_str = (f"success rates are across {num_devs} devices)\n"
+    w_str = (f"Success rates are across {total_iters} iterations of SA.\n"
              f"In this sim ==============================\n"
              f"MTJ varied across these rates: {MTJs_is_dev}\n"
              f"CBA varied across these rates': {CBA_is_dev}\n"

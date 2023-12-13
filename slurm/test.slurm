@@ -6,7 +6,7 @@
 #SBATCH -p normal            # Queue (partition) name
 #SBATCH -N 1                 # Total # of nodes (must be 1 for serial)
 #SBATCH -n 1               # Total # of mpi tasks (should be 1 for serial)
-#SBATCH -t 12:00:00          # Run time (hh:mm:ss)
+#SBATCH -t 00:05:00          # Run time (hh:mm:ss)
 #SBATCH -A OTH21017          # Project allocation
 #SBATCH --mail-user=jared.arzate@utexas.edu
 #SBATCH --mail-type=all      # Send email at begin and end of job
@@ -17,5 +17,5 @@ pwd
 date
 
 # Launch code
-srun -c 128 python main.py
+srun -c 127 python test_main.py
 

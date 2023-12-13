@@ -13,7 +13,7 @@ import os
 #-Controlled Magnetic Anisotropy and Spin Orbit Torque Magnetic Tunnel Junctions 
 
 # Global ==================
-total_iters = 500
+total_iters = 100
 num_devs    = 5
 CBA_is_dev    = True
 MTJs_is_dev   = True
