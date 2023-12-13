@@ -15,11 +15,11 @@ import os
 
 # Global ==================
 total_iters = 1000
-num_devs    = 100
-CBA_is_dev    = True
-MTJs_is_dev   = True
+num_devs    = 10
+CBA_is_dev    = False
+MTJs_is_dev   = False
 parallel_flag = True
-batch_size = 128
+batch_size = 32
 prob = "Max Sat"
 cb_array  = RRAM_types.HfHfO2
 iter_per_temp = 3  # 3 works well

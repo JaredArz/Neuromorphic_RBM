@@ -1,22 +1,25 @@
 import sys
+sys.path.append("./data_proc")
+import plotting_funcs as pf
+from datetime import datetime
+import matplotlib.pyplot as plt
+import matplotlib.style as style
 import scienceplots
-from interface_funcs import mtj_sample
 import os
 import time
 import numpy as np
 import glob
-from datetime import datetime
-import matplotlib.pyplot as plt
-from mtj_types import SHE_MTJ_rng, draw_norm
 import re
-import matplotlib.style as style
 from tqdm import tqdm
 
-j_steps = 500
+from mtj_types import SHE_MTJ_rng
+
+j_steps = 50 #was 250
 J_lut = np.linspace(-6e9,6e9,j_steps)
 J_SHEs = [3e11, 5e11, 4.85e12]
-num_to_avg = 10000
-dev_variations = 100
+num_to_avg = 1000
+#num_to_avg = 10000
+dev_variations = 2 #was 100
 
 def gen():
   start_time = time.time()
@@ -35,7 +38,7 @@ def gen():
           avg_wght = 0
           for _ in range(num_to_avg):
             J_stt = J_lut[j]
-            out,_ = mtj_sample(dev,J_stt,J_SHE)
+            out, _ = dev.mtj_sample(J_stt,J_SHE)
             avg_wght = avg_wght + out
           avg_wght = avg_wght/num_to_avg
           weights.append(avg_wght)
@@ -53,19 +56,16 @@ def get_out_path():
   make_dir = lambda d: None if(os.path.isdir(d)) else(os.mkdir(d))
   #create dir and write path
   date = datetime.now().strftime("%H:%M:%S")
-  out_path = (f"./results/weight_dataset_{date}")
-  make_dir("./results")
+  out_path = (f"./outputs/weight_dataset_{date}")
+  make_dir("./outputs")
   make_dir(f"{out_path}")
   return out_path
 
+CB_color_cycle = ['#377eb8', '#ff7f00', '#4daf4a',
+                '#f781bf', '#a65628', '#984ea3',
+                '#999999', '#e41a1c', '#dede00']
 def plot(path):
-  CB_color_cycle = ['#377eb8', '#ff7f00', '#4daf4a',
-                  '#f781bf', '#a65628', '#984ea3',
-                  '#999999', '#e41a1c', '#dede00']
-  fig, ax = plt.subplots()
-  plt.rc('text', usetex=True)
-  plt.style.use(['science','ieee'])
-  plt.tight_layout()
+  fig, ax = pf.plot_init()
   slash_re = r'\/$'
   date_re = r'\d{2}:\d{2}:\d{2}'
   lines=[]
@@ -83,7 +83,7 @@ def plot(path):
     average = np.average(weights_2d,axis=0)
     line, = plt.plot(J_lut,average,color=CB_color_cycle[i], alpha=1, linewidth=2, linestyle='-')
     lines.append(line)
-    stddevs = np.array(compute_stddevs(weights_2d))
+    stddevs = np.std(weights_2d, axis=0, ddof=1)
     minus = average[:] - stddevs[:]
     plus = average[:] + stddevs[:]
     # takes average of all devices and plots that scurve
@@ -91,37 +91,23 @@ def plot(path):
     # to plot error bands
     # note that each device weight curve is itself averaged over a few times to get
     # a solid line
-    plt.fill_between(J_lut,minus,plus,interpolate=True,alpha=0.2)
+    ax.fill_between(J_lut,minus,plus,interpolate=True,alpha=0.2)
 
-  plt.xlabel(r'$J_{STT}$ ($A/m^{2}$)')
-  plt.ylabel('Weight')
-  plt.ylim([-0.05, 1.05])
-  plt.legend([lines[0],lines[1],lines[2]], [r'$3*10^{11}$', r'$5*10^{11}$', r'$5*10^{12}$'], title=r'$J_{SOT}(A/m^2)$',loc='upper right',prop={'size':16})
-  print("save figure? (y/n)")
-  user_bool = input()
-  if user_bool == 'y' or user_bool == 'Y':
-    match = re.search(date_re, path)
-    if match:
-      date=match.group(0)
-      plt.savefig(f"./results/weight_dataset_{date}/scurve.png",format='png',dpi=1200)
-    else:
-      print("No date associated with dataset, enter a string to save ./results/scurve_<your input>.png")
-      user_tag = input()
-      plt.savefig(f"./results/scurve_{user_tag}.png",format='png',dpi=1200)
-  plt.show()
+  ax.set_xlabel(r'$J_{STT}$ ($A/m^{2}$)')
+  ax.set_ylabel('Weight')
+  ax.set_ylim([-0.05, 1.05])
+  ax.legend([lines[0],lines[1],lines[2]], [r'$3*10^{11}$', r'$5*10^{11}$', r'$5*10^{12}$'], title=r'$J_{SOT}(A/m^2)$',loc='upper right',prop={'size':16})
 
-def compute_stddevs(weights_2d):
-    arr_len = len(weights_2d[0])
-    n = len(weights_2d)
-    weights_2d = np.array(weights_2d)
-    means = np.average(weights_2d,axis=0)
-    sums = np.ones_like(weights_2d[0])
-    diff = np.ones_like(weights_2d)
-    for i in range(arr_len):
-        diff[:, i] = pow(weights_2d[:, i] - means[i],2)
-        sums[i] = np.sum(diff[:, i])
-    stddevs = pow(sums/(n-1), 0.5)
-    return stddevs
+
+  match = re.search(date_re, path)
+  if match:
+    date=match.group(0)
+  else:
+    print("No date associated with dataset, fix paths manually, exiting")
+    return 0
+
+  pf.prompt_show(fig)
+  pf.prompt_save_svg(fig, f"./outputs/weight_dataset_{date}/scurve.svg")
 
 if __name__ == "__main__":
   if len(sys.argv) < 2:

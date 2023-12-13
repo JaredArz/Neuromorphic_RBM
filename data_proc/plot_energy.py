@@ -7,10 +7,10 @@ param_dir = "params_Gdd0.2_Gcc0.05_NddTrue_Js150_i3"
 dev_dir = "Dev_4"
 sys.path.append('{output_path}/{session_dir}/{data_dir}/{param_dir}/{dev_dir}/')
 import matplotlib.pyplot as plt
-import scienceplots
 import gzip
 from pathlib import Path
 import os
+import plotting_funcs as pf
 
 data_file = 'RBM_energy_and_sols.npy.gz'
 path_to_data = Path(Path( output_path)\
@@ -19,9 +19,15 @@ path_to_data = Path(Path( output_path)\
                     /Path(param_dir)  \
                     /Path(dev_dir)    \
                     /Path(data_file))
-Jsot_max    = 5e11 
-Jsot_min    = 1e11   
+Jsot_max    = 5e11
+Jsot_min    = 1e11
 Jsot_steps = 150
+
+colors = [
+         '#648FFF',
+         '#DC267F',
+         '#FFB000',
+         ]
 def main():
     arr = []
     with gzip.open(path_to_data, 'rb') as f:
@@ -48,17 +54,11 @@ def main():
     x = np.linspace(Jsot_min,Jsot_max,Jsot_steps)
 
 
-    fig, ax1 = plot_init()
+    fig, ax1 = pf.plot_init()
+    ax1.set_xlabel(r'Current Density $A/m^3$')
     plot_single_energy(x,fig,ax1,es)
     plt.savefig("s.svg", format="svg")
 
-def plot_init():
-    fig, ax1 = plt.subplots()
-    ax1.set_xlabel(r'Current Density $A/m^3$')
-    plt.rc('text', usetex=True)
-    plt.style.use(['science','ieee'])
-    fig.tight_layout()
-    return fig,ax1
 
 def plot_avg_energy(x,y,fg,ax1):
     ax1.plot(x,y,'#648FFF')
@@ -67,11 +67,6 @@ def plot_avg_energy(x,y,fg,ax1):
     ax1.set_ylabel('System Energy')
 
 def plot_single_energy(x,fg,ax1,es):
-    colors = [  
-             '#648FFF',
-             '#DC267F',
-             '#FFB000',
-             ]
     for y in enumerate(es):
         i = y[0]
         y = y[1]

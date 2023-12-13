@@ -13,24 +13,24 @@ import os
 #-Controlled Magnetic Anisotropy and Spin Orbit Torque Magnetic Tunnel Junctions 
 
 # Global ==================
-total_iters = 100
+total_iters = 500
 num_devs    = 5
 CBA_is_dev    = True
 MTJs_is_dev   = True
 parallel_flag = True
-batch_size = 4
+batch_size = 12
 prob = "Max Sat"
-cb_array  = RRAM_types.HfHfO2
+cb_array  = RRAM_types.MTJ_INC
 iter_per_temp = 3  # 3 works well
 Jsot_steps    = 150  # 150 works well -- jared
 # ====================
 
 def main():
     # sweeping parameters
-    g_dev_sig   = [0.25]
-    g_cyc_sig   = [0.25]
-    mag_dev_sig = [0.05]
-    scale = [1e6,1e7,1e8,1e9,1e10,1e11,1e12,1e13,1e14,1e15]
+    Gdd = 0.0
+    Gcc = 0.0
+    Mdd = 0.0
+    s = 1e12
 
     #  constants, named list 
     c = {"total_iters":total_iters, "num_devs": num_devs,
@@ -43,18 +43,11 @@ def main():
     # ========================== sweep ==================================
     total_start_time = time.time()
 
-    for Mdd in mag_dev_sig:
-        for Gcc in g_cyc_sig:
-            for Gdd in g_dev_sig:
-                for s in scale:
-                    r_str = (str(Gdd)+str(Gcc)+str(Mdd)+str(s))
-                    if(repeat_run(r_str)): continue
-                    else:run_strings.add(r_str)
-                    p = {"g_dev_sig": Gdd, "g_cyc_sig":Gcc,"mag_dev_sig":Mdd,"scale":s}
-                    param_path = h.get_param_path(out_path,p)
-                    sim_setup  = h.get_simulation_setup(p,c)
-                    h.write_setup(sim_setup,param_path)
-                    sim_wrapper(p,c,param_path)
+    p = {"g_dev_sig": Gdd, "g_cyc_sig":Gcc,"mag_dev_sig":Mdd,"scale":s}
+    param_path = h.get_param_path(out_path,p)
+    sim_setup  = h.get_simulation_setup(p,c)
+    h.write_setup(sim_setup,param_path)
+    sim_wrapper(p,c,param_path)
 
     # ===============================================================================
 
@@ -88,7 +81,7 @@ def sim_wrapper(p,c,parent_path):
     #==================================
 
     f = open( Path( parent_path / "device_iterations.txt" ), 'w' )
-    w_str = (f"success rates are across {num_devs} devices)\n"
+    w_str = (f"Success rates are across {total_iters} iterations of SA.\n"
              f"In this sim ==============================\n"
              f"MTJ varied across these rates: {MTJs_is_dev}\n"
              f"CBA varied across these rates': {CBA_is_dev}\n"

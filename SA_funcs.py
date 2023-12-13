@@ -1,5 +1,4 @@
 import sys
-from interface_funcs import mtj_sample
 from   mtj_types import SHE_MTJ_rng
 import numpy as np
 import copy
@@ -7,6 +6,9 @@ import os
 import time
 import itertools as it
 import helper_funcs as h
+
+
+debug = False
 
 Max_Sat_Weights = np.array([[-5, -1, -1, 10, -1, -1],
                           [-1, -7, -2, -2, 10, -1],
@@ -110,10 +112,18 @@ def SA(p,c, Edges,devs, sol_queue,sol_hist_queue,e_hist_queue,parallel_flag):
     energy_history = []
     solution_history = []
 
+    if debug:
+        f = open("weighted_inputs.txt", "w")
+
     Teff = Jsot_max #Set effective temperature
     while(Teff >= Jsot_min):
         for g in range(iter_per_temp):
             weighted_scaled_limited = lmap(limit_current,weighted * scale)
+            if debug:
+                for j in weighted_scaled_limited:
+                    f.write(str(j))
+                    f.write("  ")
+                f.write("\n")
             Vertices = (sample_neurons(devs,weighted_scaled_limited,Teff,0))
 
             #============================
@@ -128,6 +138,8 @@ def SA(p,c, Edges,devs, sol_queue,sol_hist_queue,e_hist_queue,parallel_flag):
         Edges = inject_add_cyc_noise(Edges_base,cb_array,g_cyc_sig)
         Teff -= Jsot_delta
     solution = convertToDec(Vertices)
+    if debug:
+        f.close()
     if parallel_flag:
         sol_queue.put(solution)
         sol_hist_queue.put(solution_history)
@@ -153,7 +165,7 @@ def sample_neurons(devs,neurons_dot_W_scaled,J_step,dump_flag) -> list:
     if type(neurons_dot_W_scaled) is int:
         neurons_dot_W_scaled = np.zeros(6)
     for h in range(6):
-        out, _ = mtj_sample(devs[h],neurons_dot_W_scaled[h],J_step)
+        out, _ = devs[h].mtj_sample(neurons_dot_W_scaled[h],J_step)
         bits.append( out )
     return bits
 

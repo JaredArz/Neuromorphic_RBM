@@ -13,7 +13,7 @@ module sampling
         ! --------------------------------*------------*-----------------------------------
         subroutine sample_SHE(energy_usage, bit, theta_end, phi_end,&
                                  Jappl, Jshe, theta_init, phi_init, Ki_in, TMR_in, Rp_in,&
-                                 dump_mod, view_mag_flag, sample_count, file_ID, config_check) 
+                                 dump_mod, view_mag_flag, sample_count, file_ID) 
             implicit none
             integer, parameter :: dp = kind(0.0d0)
             ! Dynamical parameters
@@ -21,7 +21,7 @@ module sampling
             ! Device input parameters
             real, intent(in) :: Ki_in, TMR_in, Rp_in
             ! Functional parameters
-            integer, intent(in) :: file_ID, sample_count, dump_mod, config_check
+            integer, intent(in) :: file_ID, dump_mod, sample_count
             logical, intent(in) :: view_mag_flag
             ! Return values
             real, intent(out) :: energy_usage, theta_end, phi_end
@@ -37,7 +37,7 @@ module sampling
             ! ======== solve init ========= 
             ! Fortran array indexing starts at 1
             t_i  = 1 
-            fwrite_enabled = ((mod(sample_count,dump_mod) .eq. 0 .and. view_mag_flag) .or. config_check .eq. 1)
+            fwrite_enabled = (mod(sample_count,dump_mod) .eq. 0 .and. view_mag_flag)
 
             pulse_steps = int(t_pulse/t_step)
             relax_steps = int(t_relax/t_step)
@@ -68,7 +68,7 @@ module sampling
                            t_i, phi_i, theta_i, phi_evol, theta_evol, cuml_pow)
 
             if(fwrite_enabled) then
-                call file_dump(file_ID, phi_evol, theta_evol, 1)
+                call file_dump(file_ID, phi_evol, theta_evol)
             end if
 
             ! ===== return final solve values: energy,bit,theta,phi ====
@@ -129,33 +129,23 @@ module sampling
            end do
         end subroutine drive
 
-        subroutine file_dump(file_ID, phi_evol, theta_evol, overwrite_flag)
+        subroutine file_dump(file_ID, phi_evol, theta_evol)
             implicit none
             integer,  parameter :: dp = kind(0.0d0)
             real(dp), dimension(:), intent(in) :: phi_evol, theta_evol
-            integer,  intent(in) :: file_ID, overwrite_flag
+            integer,  intent(in) :: file_ID
             character(len=7) :: file_string
 
             ! ===== array dump to file of theta/phi time evolution  ====
             write (file_string,'(I7.7)') file_ID
-            if( overwrite_flag .eq. 1) then
-                open(unit = file_ID, file = "phi_time_evol_"//file_string//".txt", action = "write", status = "replace", &
-                        form = 'formatted')
-            else
-                open(unit = file_ID, file = "phi_time_evol_"//file_string//".txt", action = "write", status = "old",&
-                        position="append",form = 'formatted')
-            end if
+            open(unit = file_ID, file = "phi_time_evol_"//file_string//".txt", action = "write", status = "old",&
+                    position="append",form = 'formatted')
             write(file_ID,'(ES24.17)',advance="no") phi_evol
             close(file_ID)
 
             write (file_string,'(I7.7)') file_ID
-            if( overwrite_flag .eq. 1) then
-                open(unit = file_ID, file = "theta_time_evol_"//file_string//".txt", action = "write", status = "replace", &
-                        form = 'formatted')
-            else
-                open(unit = file_ID, file = "theta_time_evol_"//file_string//".txt", action = "write", status = "old",&
-                        position="append",form = 'formatted')
-            end if
+            open(unit = file_ID, file = "theta_time_evol_"//file_string//".txt", action = "write", status = "old",&
+                    position="append",form = 'formatted')
             write(file_ID,'(ES24.17)',advance="no") theta_evol
             close(file_ID)
         end subroutine file_dump
