@@ -1,0 +1,9 @@
+Traceback (most recent call last):
+  File "/scratch/09116/j_arzate/Git/Neuromorphic_RBM/main.py", line 135, in <module>
+srun: error: c312-051: task 0: Exited with exit code 1
+    main()
+  File "/scratch/09116/j_arzate/Git/Neuromorphic_RBM/main.py", line 53, in main
+    if(repeat_run(r_str)): continue
+  File "/scratch/09116/j_arzate/Git/Neuromorphic_RBM/main.py", line 30, in <lambda>
+    repeat_run = lambda r: False if(r not in run_strings) else( True )
+NameError: name 'run_strings' is not defined

@@ -27,8 +27,6 @@ iter_per_temp = 3  # 3 works well
 Jsot_steps    = 150  # 150 works well -- jared
 # ====================
 
-repeat_run = lambda r: False if(r not in run_strings) else( True )
-
 def main():
     # sweeping parameters
     g_dev_sig   = [0.0,0.025,0.05,0.1,0.15,0.2,0.25]
@@ -41,6 +39,7 @@ def main():
          "Jsot_steps":Jsot_steps,"prob":prob,"batch_size": batch_size}
     out_path = h.get_out_path(c)
     run_strings = set()
+    repeat_run = lambda r: False if(r not in run_strings) else( True )
 
     # ========================== sweep ==================================
     total_start_time = time.time()
