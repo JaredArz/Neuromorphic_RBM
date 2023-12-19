@@ -28,7 +28,7 @@ module sampling
             integer, intent(out) :: bit
             !==================================================================
             real(dp), dimension(:), allocatable :: theta_evol, phi_evol
-            real(dp) :: phi_i, theta_i, cuml_pow
+            real(dp) :: phi_i, theta_i, cuml_energy
             real :: seed
             integer :: t_i, pulse_steps, relax_steps, total_steps
             !==================================================================
@@ -43,7 +43,7 @@ module sampling
             relax_steps = int(t_relax/t_step)
             total_steps = pulse_steps+relax_steps+1
 
-            cuml_pow = 0.0_dp
+            cuml_energy = 0.0_dp
             theta_i = real(theta_init, dp)
             phi_i   = real(phi_init, dp)
             if(fwrite_enabled) then
@@ -61,11 +61,11 @@ module sampling
 
             !=========== Pulse current and set device to be in-plane =========
             call drive(0.0_dp, real(Jshe,dp), real(Jappl,dp), pulse_steps,&
-                           t_i, phi_i, theta_i, phi_evol, theta_evol, cuml_pow)
+                           t_i, phi_i, theta_i, phi_evol, theta_evol, cuml_energy)
 
             !=================  Relax into one of two low-energy states out-of-plane  ===================
             call drive(0.0_dp, 0.0_dp, real(Jappl,dp), relax_steps,&
-                           t_i, phi_i, theta_i, phi_evol, theta_evol, cuml_pow)
+                           t_i, phi_i, theta_i, phi_evol, theta_evol, cuml_energy)
 
             if(fwrite_enabled) then
                 call file_dump(file_ID, phi_evol, theta_evol)
@@ -80,16 +80,16 @@ module sampling
             ! Cast to real before returning to Python
             theta_end = real(theta_i)
             phi_end   = real(phi_i)
-            energy_usage = real(cuml_pow*t_step)
+            energy_usage = real(cuml_energy)
         end subroutine sample_SHE
 
-        subroutine drive(V, J_SHE, J_STT, steps, t_i, phi_i, theta_i, phi_evol, theta_evol, cuml_pow)
+        subroutine drive(V, J_SHE, J_STT, steps, t_i, phi_i, theta_i, phi_evol, theta_evol, cuml_energy)
            implicit none
            integer,  parameter :: dp = kind(0.0d0)
            real(dp), intent(in) :: V, J_SHE, J_STT
            integer,  intent(in)  :: steps
            real(dp), dimension(:), intent(inout) :: phi_evol, theta_evol
-           real(dp), intent(inout) :: phi_i, theta_i, cuml_pow
+           real(dp), intent(inout) :: phi_i, theta_i, cuml_energy
            integer,  intent(inout) :: t_i
            real(dp) :: Hk, Ax, Ay, Az, dphi, dtheta, R1, pow, cos_theta, sin_theta,&
                        cos_phi, sin_phi, v_pow, she_pow 
@@ -121,7 +121,7 @@ module sampling
                pow = v_pow + she_pow + (R1*(J_STT*A1)**2)
                phi_i   = phi_i   + t_step*dphi 
                theta_i = theta_i + t_step*dtheta
-               cuml_pow = pow + cuml_pow
+               cuml_energy = cuml_energy + (pow * t_step)
                if(fwrite_enabled) then
                    theta_evol(t_i) = theta_i
                    phi_evol(t_i)   = phi_i

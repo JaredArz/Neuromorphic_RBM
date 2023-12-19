@@ -15,14 +15,14 @@ import os
 
 # Global ==================
 total_iters = 5000
-num_devs    = 100
+num_dev_configs    = 100
 CBA_is_dev    = True
 MTJs_is_dev   = True
 parallel_flag = True
 batch_size = 127
 prob = "Max Sat"
 cb_array  = RRAM_types.HfHfO2
-scale = 1e12
+scale =
 iter_per_temp = 3  # 3 works well
 Jsot_steps    = 150  # 150 works well -- jared
 # ====================
@@ -34,7 +34,7 @@ def main():
     mag_dev_sig = [0.0,0.025,0.05,0.1,0.15,0.2,0.25]
 
     #  constants, named list 
-    c = {"total_iters":total_iters, "num_devs": num_devs,
+    c = {"total_iters":total_iters, "num_devs": num_dev_configs,
          "cb_array":cb_array,"iter_per_temp":iter_per_temp,
          "Jsot_steps":Jsot_steps,"prob":prob,"batch_size": batch_size}
     out_path = h.get_out_path(c)
@@ -95,19 +95,24 @@ def sim_wrapper(p,c,parent_path):
     success_rate_list = []
     ### redundant iff. CBA and MTJ are both device
     Edges = SetCBA(p["g_dev_sig"],c["prob"],c["cb_array"])
-    devs = SetMTJs(p["mag_dev_sig"])
-    for dev_i in range(num_devs):
+    Neurons = SetMTJs(p["mag_dev_sig"])
+    for dev_i in range(num_dev_configs):
         if CBA_is_dev:
             Edges = SetCBA(p["g_dev_sig"],c["prob"],c["cb_array"])
         if MTJs_is_dev:
-            devs = SetMTJs(p["mag_dev_sig"])
+            Neurons = SetMTJs(p["mag_dev_sig"])
         if parallel_flag:
-            sols,all_sols,all_e = run_in_batch(SA,p,c,Edges,devs)
+            sols,all_sols,all_e = run_in_batch(SA,p,c,Edges,Neurons)
         else:
-            sols,all_sols,all_e = run_serial(SA,p,c,Edges,devs)
+            sols,all_sols,all_e = run_serial(SA,p,c,Edges,Neurons)
+        total_energy_usage = 0
+        for mtj in Neurons:
+            total_energy_usage += mtj.energy_usage
+        average_energy_usage_per_device = total_energy_usage / len(Neurons)
         success_rate_list.append(h.get_success_rate(all_sols,c["prob"]))
         #NOTE: debug: print(f"--- success rate {dev_i}: {success_rate}% ---")
         h.write_data(all_e,all_sols,parent_path,dev_i)
+        h.write_energy_usage(average_energy_usage_per_device, parent_path,dev_i)
     std_dev = np.std(success_rate_list)
     mean = np.average(success_rate_list)
     #==================================
@@ -122,10 +127,8 @@ def sim_wrapper(p,c,parent_path):
              f"High: {np.max(success_rate_list)}\n"
              f"Low: {np.min(success_rate_list)}\n===== rates per device ======\n"
             )
-    for dev_i in range(num_devs):
-        w_str += f"Dev {dev_i}: {success_rate_list[dev_i]}\n"
-        for dev in devs:
-            del dev
+    for dev_i in range(num_dev_configs):
+        w_str += f"Device config {dev_i}: {success_rate_list[dev_i]}\n"
     f.write(w_str)
     f.close()
     return 0

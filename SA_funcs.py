@@ -100,12 +100,8 @@ def SA(p,c, Edges,devs, sol_queue,sol_hist_queue,e_hist_queue,parallel_flag):
     # ////////////
     # ////////////
     # ================================== Exexcute SA ==================================
-    #   uncomment if analyzing evolution of algorithm across annealing schedule
-    #sols_across_temp   = [] 
-    #energy_across_temp = []
-    # =================================================
-    #   Random state to start
-    # =================================================
+
+    # Random state to start
     Vertices = sample_neurons(devs,0,0,0)
     weighted = np.dot(Vertices, Edges)
 
@@ -165,7 +161,7 @@ def sample_neurons(devs,neurons_dot_W_scaled,J_step,dump_flag) -> list:
     if type(neurons_dot_W_scaled) is int:
         neurons_dot_W_scaled = np.zeros(6)
     for h in range(6):
-        out, _ = devs[h].mtj_sample(neurons_dot_W_scaled[h],J_step)
+        out = devs[h].mtj_sample(neurons_dot_W_scaled[h],J_step)
         bits.append( out )
     return bits
 

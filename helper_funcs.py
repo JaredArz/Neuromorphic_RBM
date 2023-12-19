@@ -53,6 +53,12 @@ def write_data(all_e,all_sols,out_dir,dev_i) -> None:
     np.save(f,all_sols)
     f.close()
 
+def write_energy_usage(energy,out_dir,dev_i) -> None:
+    data_w_file = f'nrg_and_sols_d{dev_i}.npy.gz'
+    f = gzip.GzipFile(Path( out_dir / data_w_file ) , "a")
+    np.save(f,energy)
+    f.close()
+
 def write_setup(sim_setup,out_dir) -> None:
     metadata_w_file = 'RBM_metadata.txt'
     f = open( Path( out_dir / metadata_w_file)  ,'a')

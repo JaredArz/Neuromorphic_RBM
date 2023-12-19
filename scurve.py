@@ -38,7 +38,7 @@ def gen():
           avg_wght = 0
           for _ in range(num_to_avg):
             J_stt = J_lut[j]
-            out, _ = dev.mtj_sample(J_stt,J_SHE)
+            out = dev.mtj_sample(J_stt,J_SHE)
             avg_wght = avg_wght + out
           avg_wght = avg_wght/num_to_avg
           weights.append(avg_wght)
