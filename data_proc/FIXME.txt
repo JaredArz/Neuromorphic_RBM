@@ -1,0 +1,2 @@
+configure plot_sweep to use sim_class then delete process sweep
+ all plotting scripts are then updated and good to go, use new data, make new plots, finish paper

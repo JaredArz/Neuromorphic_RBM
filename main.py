@@ -15,23 +15,26 @@ import os
 
 # Global ==================
 total_iters = 5000
-num_dev_configs    = 100
+num_dev_configs  = 100
 CBA_is_dev    = True
 MTJs_is_dev   = True
 parallel_flag = True
-batch_size = 127
+batch_size = 14 #FIXME
 prob = "Max Sat"
 cb_array  = RRAM_types.HfHfO2
-scale =
+scale = 1e14
 iter_per_temp = 3  # 3 works well
 Jsot_steps    = 150  # 150 works well -- jared
 # ====================
 
 def main():
     # sweeping parameters
-    g_dev_sig   = [0.0,0.025,0.05,0.1,0.15,0.2,0.25]
-    g_cyc_sig   = [0.0,0.025,0.05,0.1,0.15,0.2,0.25]
-    mag_dev_sig = [0.0,0.025,0.05,0.1,0.15,0.2,0.25]
+    #g_dev_sig   = [0.0,0.025,0.05,0.1,0.15,0.2,0.25]
+    #g_cyc_sig   = [0.0,0.025,0.05,0.1,0.15,0.2,0.25]
+    #mag_dev_sig = [0.0,0.025,0.05,0.1,0.15,0.2,0.25]
+    g_dev_sig   = [0.0]
+    g_cyc_sig   = [0.0]
+    mag_dev_sig = [0.0]
 
     #  constants, named list 
     c = {"total_iters":total_iters, "num_devs": num_dev_configs,

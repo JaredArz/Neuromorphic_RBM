@@ -39,8 +39,8 @@ def get_dev_path(param_path,dev_i):
     return dev_path
 
 def get_param_path(out_path,p):
-    g_dev_sig,g_cyc_sig,mag_dev_sig,scale = unpack_params(p)
-    param_dir = f'p_Gdd{g_dev_sig}_Gcc{g_cyc_sig}_Ndd{mag_dev_sig}_s{scale:.2e}'
+    g_dev_sig,g_cyc_sig,mag_dev_sig,_ = unpack_params(p)
+    param_dir = f'p_Gdd{g_dev_sig}_Gcc{g_cyc_sig}_Ndd{mag_dev_sig}'
     param_path =  out_path / Path(param_dir)
     if not os.path.isdir(param_path):
         os.mkdir(param_path)

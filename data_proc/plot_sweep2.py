@@ -3,6 +3,7 @@ import scienceplots
 import numpy as np
 from data_class import data
 import plotting_funcs as pf
+from sim_class import sim
 
 colors = [
          '#648FFF',
@@ -11,26 +12,23 @@ colors = [
          ]
 
 def main():
-    x = [0.0,0.05,0.1,0.15,0.2,0.25,0.3,0.4,0.5]
-    # for reference:
-    #   mdd   = [0.0,0.05,0.1]
-    #   scale = [0.75e14,1e14,1.25e14]
     fig,ax  = pf.plot_init()
     ax.title("Success Rate Parameter Sweep")
     ax.set_ylabel("Percent Success Rate")
     ax.set_xlabel('Standard Deviation')
     ax.set_ylim((0,100))
 
-    print("file to load:")
-    data_fname = input()
-    D = np.load(data_fname,allow_pickle=True)
+    this_sim = sim()
+    data = this_sim.get_interactive()
     #=========== mdd,s,gdd,gcc
-    plot_sweep_slice(ax,x,D[0,0,:,0],colors[0])
-    plot_sweep_slice(ax,x,D[0,1,:,0],colors[1])
-    plot_sweep_slice(ax,x,D[0,2,:,0],colors[2])
-    print("save plot as (.svg):")
-    fname = input()
-    fig.savefig(f"./plots/{fname}.svg", format = 'svg')
+    # GOAL: plot all Ndd,Gcc constant and just vary Gdd
+    #plot_sweep_slice(ax,x,D[0,0,:,0],colors[0])
+    #plot_sweep_slice(ax,x,D[0,1,:,0],colors[1])
+    #plot_sweep_slice(ax,x,D[0,2,:,0],colors[2])
+    # need to get mean, high, low, data for varying values in range... need full sweep of data to actually test
+    sweep = data["sols"]
+
+    pf.prompt_save_svg("./test_sweep.svg")
 
 get_slice_attrs = lambda sliced, attr: [getattr(elem, attr) for elem in sliced]
 def plot_sweep_slice(ax,x,sliced,color):

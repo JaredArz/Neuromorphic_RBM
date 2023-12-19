@@ -1,82 +1,56 @@
-import numpy as np
 import sys
-output_path = "../outputs"
-session_dir = "RBM_sims_08-10"
-data_dir = "MaxSat_1000_Memristor_19:02:54"
-param_dir = "params_Gdd0.2_Gcc0.05_NddTrue_Js150_i3"
-dev_dir = "Dev_4"
-sys.path.append('{output_path}/{session_dir}/{data_dir}/{param_dir}/{dev_dir}/')
 import matplotlib.pyplot as plt
-import gzip
 from pathlib import Path
+import numpy as np
+import gzip
 import os
-import plotting_funcs as pf
 
-data_file = 'RBM_energy_and_sols.npy.gz'
-path_to_data = Path(Path( output_path)\
-                    /Path(session_dir)\
-                    /Path(data_dir)   \
-                    /Path(param_dir)  \
-                    /Path(dev_dir)    \
-                    /Path(data_file))
+import plotting_funcs as pf
+from sim_class import sim
+
 Jsot_max    = 5e11
 Jsot_min    = 1e11
-Jsot_steps = 150
+Jsot_steps  = 150
 
 colors = [
          '#648FFF',
          '#DC267F',
          '#FFB000',
          ]
+
 def main():
-    arr = []
-    with gzip.open(path_to_data, 'rb') as f:
-        f_content = f.read()
-    with open("temp.npy", 'ab') as f:
-        f.write(f_content)
-    with open("temp.npy", 'rb') as f:
-        all_e = np.load(f)
-        all_s = np.load(f)
-    os.remove("temp.npy")
+    this_sim = sim()
+    data = this_sim.get_interactive()
+    es = data["costs"]
+    sols  = data["sols"]
 
-    avg_e = list(np.average(all_e,axis=0))
-    end_sols = [ elem[-1] for elem in all_s]
+    J_sot = np.linspace(Jsot_min,Jsot_max,Jsot_steps)
 
-    #4 is incredibly good
-    #5 is demonstrative, high to low
-    #6 is demonstrative, low to high
-    sing_i = 5
-    s_single = all_s[sing_i]
-    #es = (all_e[12], all_e[18], all_e[5])
-    ind=11
-    es = (all_e[ind])
+    fig, ax = pf.plot_init()
+    ax.set_xlabel(r'Current Density $A/m^3$')
+    init_energys_plot(J_sot,es,ax)
+    pf.prompt_save_svg(fig, "./test.svg")
 
-    x = np.linspace(Jsot_min,Jsot_max,Jsot_steps)
+def init_avg_energy_plot(x,y,ax):
+    ax.plot(x,y,colors[0])
+    ax.axhline(y=y[-1], color="black", linestyle="--",alpha=0.15)
+    ax.set_title('Average Energy Across SA Iterations')
+    ax.set_ylabel('System Energy')
 
+def init_energys_plot(x,es,ax):
+    min_e = es[0,0]
+    for array in es:
+        current = np.amin(array)
+        if (current < min_e):
+            min_e = current
+    ax.axhline( min_e , color='0', linestyle="--",alpha=0.6)
+    for i,e in enumerate(es):
+        ax.plot(x,e,color=colors[i % len(colors)],alpha=0.9)
+    ax.set_title('Energy Over SA Iterations')
+    ax.set_ylabel('System Energy')
 
-    fig, ax1 = pf.plot_init()
-    ax1.set_xlabel(r'Current Density $A/m^3$')
-    plot_single_energy(x,fig,ax1,es)
-    plt.savefig("s.svg", format="svg")
-
-
-def plot_avg_energy(x,y,fg,ax1):
-    ax1.plot(x,y,'#648FFF')
-    ax1.axhline(y=y[-1], color="black", linestyle="--",alpha=0.15)
-    ax1.set_title('Average Energy Across SA Iterations')
-    ax1.set_ylabel('System Energy')
-
-def plot_single_energy(x,fg,ax1,es):
-    for y in enumerate(es):
-        i = y[0]
-        y = y[1]
-        ax1.plot(x,y,color=colors[i],alpha=0.9)
-        if i == 0:
-            ax1.axhline(y=y[-1], color='0', linestyle="--",alpha=0.6)
-    ax1.set_title('Energy Over SA Iterations')
-    ax1.set_ylabel('System Energy')
-
-def plot_single_energy_and_sol(x,y):
+""" FIXME
+def init_single_energy_and_sol(x,y):
     # =======================
     ax1.plot(x,sols_sample,color="#3976af")
     ax1.axhline(y=sols_sample[25], color="black", linestyle="--",alpha=0.15)
@@ -90,7 +64,7 @@ def plot_single_energy_and_sol(x,y):
     ax1.set_xlabel('Current Density A/m³')
     ax1.set_ylabel('Solution in Decimal')
     ax2.set_ylabel('System Energy')
-
+"""
 
 if __name__ == "__main__":
     main()
