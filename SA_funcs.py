@@ -162,6 +162,7 @@ def sample_neurons(devs,neurons_dot_W_scaled,J_step,dump_flag) -> list:
         neurons_dot_W_scaled = np.zeros(6)
     for h in range(6):
         out = devs[h].mtj_sample(neurons_dot_W_scaled[h],J_step)
+        print(devs[h].energy_usage)
         bits.append( out )
     return bits
 

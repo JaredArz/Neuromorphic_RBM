@@ -29,7 +29,7 @@ class SHE_MTJ_rng():
         self.Ki  = draw_norm(1.0056364e-3,sig/2)  # The anisotropy energy in J/m2
         self.TMR = draw_norm(1.2,sig)             # TMR ratio at V=0,120%  
         self.Rp  = draw_norm(5e3,sig)             # Magenetoresistance at parallel state, 8000 Ohm
-        self.energy_usage = 0
+        self.energy_usage = 0.0e0
         self.sample_count = 1
         self.thetaHistory = []
         self.phiHistory   = []

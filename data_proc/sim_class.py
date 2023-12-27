@@ -67,6 +67,7 @@ class sim:
                 all_e = np.load(f)
                 all_s = np.load(f)
                 energy_usage = np.load(f)
+                print(energy_usage)
             os.remove("temp.npy")
 
         data = {
@@ -120,5 +121,7 @@ class sim:
 
         return sliced
 
-test = sim("../outputs/RBM_sims_12-19/MaxSat_Memristor_500_15:30:47")
-print(test.slice("Gdd","energy"))
+#test = sim("../outputs/RBM_sims_12-19/MaxSat_Memristor_500_15:30:47")
+test = sim("../outputs/RBM_sims_12-27/MaxSat_Memristor_10_16:18:40")
+data = test.get_data(0.0,0.0,0.0)
+print(data["energy"])

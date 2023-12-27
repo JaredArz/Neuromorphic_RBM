@@ -14,17 +14,18 @@ import os
 #-Controlled Magnetic Anisotropy and Spin Orbit Torque Magnetic Tunnel Junctions 
 
 # Global ==================
-total_iters = 1 #5000
+total_iters = 100 #5000
+#FIXME: average energy properly for iters and num_dev configs
 num_dev_configs  = 1 #100
 CBA_is_dev    = True
 MTJs_is_dev   = True
 parallel_flag = True
-batch_size = 4 #FIXME
+batch_size = 14 #FIXME
 prob = "Max Sat"
-cb_array  = RRAM_types.HfHfO2
+cb_array = RRAM_types.HfHfO2
 scale = 1e14
-iter_per_temp = 1  # 3 works well
-Jsot_steps    = 10  # 150 works well -- jared
+iter_per_temp = 3  # 3 works well
+Jsot_steps    = 100  # 150 works well -- jared
 # ====================
 
 def main():
@@ -101,13 +102,15 @@ def sim_wrapper(p,c,parent_path):
             Edges = SetCBA(p["g_dev_sig"],c["prob"],c["cb_array"])
         if MTJs_is_dev:
             Neurons = SetMTJs(p["mag_dev_sig"])
+
         if parallel_flag:
             sols,all_sols,all_e = run_in_batch(SA,p,c,Edges,Neurons)
         else:
             sols,all_sols,all_e = run_serial(SA,p,c,Edges,Neurons)
-        total_energy_usage = 0
+        total_energy_usage = 0.0
         for mtj in Neurons:
             total_energy_usage += mtj.energy_usage
+        print(total_energy_usage)
         average_energy_usage_per_device = total_energy_usage / len(Neurons)
         success_rate_list.append(h.get_success_rate(all_sols,c["prob"]))
         #NOTE: debug: print(f"--- success rate {dev_i}: {success_rate}% ---")
