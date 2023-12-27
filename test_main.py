@@ -14,24 +14,24 @@ import os
 #-Controlled Magnetic Anisotropy and Spin Orbit Torque Magnetic Tunnel Junctions 
 
 # Global ==================
-total_iters = 500 #5000
-num_dev_configs  = 10 #100
+total_iters = 1 #5000
+num_dev_configs  = 1 #100
 CBA_is_dev    = True
 MTJs_is_dev   = True
 parallel_flag = True
-batch_size = 14 #FIXME
+batch_size = 4 #FIXME
 prob = "Max Sat"
 cb_array  = RRAM_types.HfHfO2
 scale = 1e14
-iter_per_temp = 3  # 3 works well
-Jsot_steps    = 150  # 150 works well -- jared
+iter_per_temp = 1  # 3 works well
+Jsot_steps    = 10  # 150 works well -- jared
 # ====================
 
 def main():
     # sweeping parameters
-    g_dev_sig   = [0.0,0.025,0.05,0.1,0.15,0.2,0.25]
-    g_cyc_sig   = [0.0,0.025,0.05,0.1,0.15,0.2,0.25]
-    mag_dev_sig = [0.0,0.025,0.05,0.1,0.15,0.2,0.25]
+    g_dev_sig   = [0.0]
+    g_cyc_sig   = [0.0]
+    mag_dev_sig = [0.0]
 
     #  constants, named list 
     c = {"total_iters":total_iters, "num_devs": num_dev_configs,

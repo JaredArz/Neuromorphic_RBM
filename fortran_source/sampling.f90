@@ -81,6 +81,7 @@ module sampling
             theta_end = real(theta_i)
             phi_end   = real(phi_i)
             energy_usage = real(cuml_energy)
+            print *, energy_usage
         end subroutine sample_SHE
 
         subroutine drive(V, J_SHE, J_STT, steps, t_i, phi_i, theta_i, phi_evol, theta_evol, cuml_energy)
