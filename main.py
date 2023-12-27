@@ -29,12 +29,9 @@ Jsot_steps    = 150  # 150 works well -- jared
 
 def main():
     # sweeping parameters
-    #g_dev_sig   = [0.0,0.025,0.05,0.1,0.15,0.2,0.25]
-    #g_cyc_sig   = [0.0,0.025,0.05,0.1,0.15,0.2,0.25]
-    #mag_dev_sig = [0.0,0.025,0.05,0.1,0.15,0.2,0.25]
-    g_dev_sig   = [0.0]
-    g_cyc_sig   = [0.0]
-    mag_dev_sig = [0.0]
+    g_dev_sig   = [0.0,0.025,0.05,0.1,0.15,0.2,0.25]
+    g_cyc_sig   = [0.0,0.025,0.05,0.1,0.15,0.2,0.25]
+    mag_dev_sig = [0.0,0.025,0.05,0.1,0.15,0.2,0.25]
 
     #  constants, named list 
     c = {"total_iters":total_iters, "num_devs": num_dev_configs,
