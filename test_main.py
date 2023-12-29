@@ -5,7 +5,7 @@ import numpy as np
 import RRAM_types
 import helper_funcs as h
 from SA_funcs  import SA,SetMTJs,SetCBA
-from parallelism import run_in_batch,run_serial
+from parallelism import run
 from tqdm import tqdm
 import time
 import os
@@ -14,17 +14,18 @@ import os
 #-Controlled Magnetic Anisotropy and Spin Orbit Torque Magnetic Tunnel Junctions 
 
 # Global ==================
-total_iters = 100 #5000
+
+total_iters = 10 #5000
 #FIXME: average energy properly for iters and num_dev configs
-num_dev_configs  = 1 #100
+num_dev_configs  = 3 #100
 CBA_is_dev    = True
 MTJs_is_dev   = True
-parallel_flag = True
+parallel_flag = False
 batch_size = 14 #FIXME
 prob = "Max Sat"
 cb_array = RRAM_types.HfHfO2
 scale = 1e14
-iter_per_temp = 3  # 3 works well
+iter_per_temp = 1    # 3 works well
 Jsot_steps    = 100  # 150 works well -- jared
 # ====================
 
@@ -103,19 +104,17 @@ def sim_wrapper(p,c,parent_path):
         if MTJs_is_dev:
             Neurons = SetMTJs(p["mag_dev_sig"])
 
-        if parallel_flag:
-            sols,all_sols,all_e = run_in_batch(SA,p,c,Edges,Neurons)
-        else:
-            sols,all_sols,all_e = run_serial(SA,p,c,Edges,Neurons)
-        total_energy_usage = 0.0
+        sols,all_sols,all_e = run(SA, p, c, Edges, Neurons, parallel_flag)
+
+        success_rate_list.append(h.get_success_rate(all_sols,c["prob"]))
+        #NOTE: debug, print(f"--- success rate {dev_i}: {success_rate}% ---")
+        h.write_data(all_e,all_sols,parent_path,dev_i)
+        """ average energy usage per device on a single device configuration for single SA """
+        total_energy_usage = 0
         for mtj in Neurons:
             total_energy_usage += mtj.energy_usage
-        print(total_energy_usage)
-        average_energy_usage_per_device = total_energy_usage / len(Neurons)
-        success_rate_list.append(h.get_success_rate(all_sols,c["prob"]))
-        #NOTE: debug: print(f"--- success rate {dev_i}: {success_rate}% ---")
-        h.write_data(all_e,all_sols,parent_path,dev_i)
-        h.write_energy_usage(average_energy_usage_per_device, parent_path,dev_i)
+        h.write_energy_usage(total_energy_usage/len(Neurons),parent_path,dev_i)
+        """                                                                 """
     std_dev = np.std(success_rate_list)
     mean = np.average(success_rate_list)
     #==================================

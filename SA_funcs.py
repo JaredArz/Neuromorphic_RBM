@@ -73,7 +73,7 @@ def SetCBA(g_dev_sig,prob,cb_array):
     return Edges
 
 limit_current = lambda J: -6e9 if(J < -6e9) else( 6e9 if(J > 6e9) else J)
-def SA(p,c, Edges,devs, sol_queue,sol_hist_queue,e_hist_queue,parallel_flag):
+def SA(p,c, Edges,devs, sol_queue,sol_hist_queue,e_hist_queue):
     g_cyc_sig  = p["g_cyc_sig"]
     scale      = p["scale"]
     cb_array   = c["cb_array"]
@@ -136,12 +136,17 @@ def SA(p,c, Edges,devs, sol_queue,sol_hist_queue,e_hist_queue,parallel_flag):
     solution = convertToDec(Vertices)
     if debug:
         f.close()
+    sol_queue.put(solution)
+    sol_hist_queue.put(solution_history)
+    e_hist_queue.put(energy_history)
+    '''
     if parallel_flag:
         sol_queue.put(solution)
         sol_hist_queue.put(solution_history)
         e_hist_queue.put(energy_history)
     else:
         return [],[],[]
+    '''
 
 def convertToDec(args) -> int:
     #can take optionally a list or a numpy 2D matrix
@@ -162,7 +167,6 @@ def sample_neurons(devs,neurons_dot_W_scaled,J_step,dump_flag) -> list:
         neurons_dot_W_scaled = np.zeros(6)
     for h in range(6):
         out = devs[h].mtj_sample(neurons_dot_W_scaled[h],J_step)
-        print(devs[h].energy_usage)
         bits.append( out )
     return bits
 

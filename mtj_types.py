@@ -3,6 +3,7 @@ sys.path.append("./fortran_source")
 import sampling as f90
 import os
 import numpy as np
+
 # Format must be consistent with fortrn, do not change
 # File ID of length seven with 0's to the left
 def format_file_ID(pid) -> str:
@@ -29,19 +30,22 @@ class SHE_MTJ_rng():
         self.Ki  = draw_norm(1.0056364e-3,sig/2)  # The anisotropy energy in J/m2
         self.TMR = draw_norm(1.2,sig)             # TMR ratio at V=0,120%  
         self.Rp  = draw_norm(5e3,sig)             # Magenetoresistance at parallel state, 8000 Ohm
-        self.energy_usage = 0.0e0
+        self.energy_usage = 0.0
         self.sample_count = 1
+        """ deprecated
         self.thetaHistory = []
         self.phiHistory   = []
+        """
 
     def mtj_sample(self, Jstt, Jshe, dump_mod=1, view_mag_flag=0, file_ID=1) -> (int,float):
         # fortran call
         energy, bit, theta_end, phi_end = f90.sampling.sample_she(Jstt,\
                 Jshe, self.theta, self.phi, self.Ki, self.TMR, self.Rp,\
                 dump_mod, view_mag_flag, self.sample_count, file_ID)
-        # Need to update device objects and put together time evolution data after return.
         self.phi = phi_end
         self.theta = theta_end
+        self.energy_usage += energy
+        """ deprecated
         if( view_mag_flag and (sample_count % dump_mod == 0)):
             # These file names are determined by fortran subroutine single_sample.
             phi_from_txt   = np.loadtxt("phi_time_evol_"+ format_file_ID(file_ID) + ".txt", dtype=float, usecols=0, delimiter=None)
@@ -52,5 +56,5 @@ class SHE_MTJ_rng():
             dev.phiHistory   = list(phi_from_txt)
         if(view_mag_flag):
             self.sample_count+=1
-        self.energy_usage += energy
+        """
         return bit

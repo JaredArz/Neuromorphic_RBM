@@ -5,7 +5,7 @@ import numpy as np
 import RRAM_types
 import helper_funcs as h
 from SA_funcs  import SA,SetMTJs,SetCBA
-from parallelism import run_in_batch,run_serial
+from parallelism import run
 from tqdm import tqdm
 import time
 import os
@@ -101,18 +101,16 @@ def sim_wrapper(p,c,parent_path):
             Edges = SetCBA(p["g_dev_sig"],c["prob"],c["cb_array"])
         if MTJs_is_dev:
             Neurons = SetMTJs(p["mag_dev_sig"])
-        if parallel_flag:
-            sols,all_sols,all_e = run_in_batch(SA,p,c,Edges,Neurons)
-        else:
-            sols,all_sols,all_e = run_serial(SA,p,c,Edges,Neurons)
-        total_energy_usage = 0
-        for mtj in Neurons:
-            total_energy_usage += mtj.energy_usage
-        average_energy_usage_per_device = total_energy_usage / len(Neurons)
+        sols,all_sols,all_e = run(SA,p,c,Edges,Neurons,parallel_flag)
         success_rate_list.append(h.get_success_rate(all_sols,c["prob"]))
         #NOTE: debug: print(f"--- success rate {dev_i}: {success_rate}% ---")
         h.write_data(all_e,all_sols,parent_path,dev_i)
-        h.write_energy_usage(average_energy_usage_per_device, parent_path,dev_i)
+        """ average energy usage per device per a single device configuration for single SA """
+        total_energy_usage = 0
+        for mtj in Neurons:
+            total_energy_usage += mtj.energy_usage
+        h.write_energy_usage(total_energy_usage/len(Neurons),parent_path,dev_i)
+        """                                                                 """
     std_dev = np.std(success_rate_list)
     mean = np.average(success_rate_list)
     #==================================

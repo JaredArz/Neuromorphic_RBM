@@ -56,6 +56,10 @@ class sim:
                 extracted_values[key] = value
 
         dir_glob = glob.glob(f"{path_to_get}/*")
+        # entries will correspond to numerical device file
+        sols = []
+        costs = []
+        energy_usages = []
         for i,f_path in enumerate(dir_glob):
             if "device_iterations" in f_path or "metadata" in f_path:
                 continue
@@ -64,16 +68,15 @@ class sim:
             with open("temp.npy", 'ab') as f:
                 f.write(f_content)
             with open("temp.npy", 'rb') as f:
-                all_e = np.load(f)
-                all_s = np.load(f)
-                energy_usage = np.load(f)
-                print(energy_usage)
+                costs.append(list((np.load(f))[0]))
+                sols.append(list((np.load(f))[0]))
+                energy_usages.append(float(np.load(f)))
             os.remove("temp.npy")
 
         data = {
-            "sols" : all_s,
-            "costs" : all_e,
-            "energy" : energy_usage,
+            "sols" : sols,
+            "costs" : costs,
+            "energys" : energy_usages,
             "mean" : extracted_values["Mean"],
             "stddev" : extracted_values["Stddev"],
             "high" : extracted_values["High"],
@@ -121,7 +124,8 @@ class sim:
 
         return sliced
 
-#test = sim("../outputs/RBM_sims_12-19/MaxSat_Memristor_500_15:30:47")
-test = sim("../outputs/RBM_sims_12-27/MaxSat_Memristor_10_16:18:40")
+'''
+test = sim("../outputs/RBM_sims_12-29/MaxSat_Memristor_10_16:35:26/")
 data = test.get_data(0.0,0.0,0.0)
-print(data["energy"])
+print(data["energys"])
+'''
